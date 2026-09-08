@@ -37,8 +37,8 @@ writeFileSync(out, res.outputFiles[0].text);
 const { scopeProps, objectTypes } = await import(pathToFileURL(out).href);
 
 const notes = {
-  "a.md": { object: "type-x", author: "Ana", zeta: "1", alpha: "2", gone: "x", description: "d", localCover: "c.png", collection: "Lab" },
-  "b.md": { object: "type-x", beta: "3" },
+  "a.md": { object: "x", author: "Ana", zeta: "1", alpha: "2", gone: "x", description: "d", localCover: "c.png", collection: "Lab" },
+  "b.md": { object: "x", beta: "3" },
 };
 
 const plugin = {

@@ -69,11 +69,11 @@ const TYPES = [
 ];
 
 const FILES = {
-  "Templates/Chapter.md": { status: "template", object: "type-writing", collection: "Chapters" },
+  "Templates/Chapter.md": { status: "template", object: "writing", collection: "Chapters" },
   "Templates/Lecture.md": { status: "template" }, // no `object:` — not a template
-  "Templates/Note.md": { status: "template", object: "__pages" },
-  "Templates/Character.md": { status: "template", object: "type-writing" },
-  "Notes/Real note.md": { object: "type-writing" },
+  "Templates/Note.md": { status: "template", object: "page" },
+  "Templates/Character.md": { status: "template", object: "writing" },
+  "Notes/Real note.md": { object: "writing" },
 };
 
 const names = (plugin, type) => templatesForType(plugin, type).map((f) => f.basename).sort();

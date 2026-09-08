@@ -193,7 +193,7 @@ export async function createTask(plugin: VitrinePlugin, input: TaskInput): Promi
   const folder = type?.newNoteFolder || "Tasks";
   if (folder) await ensureFolder(app, folder);
 
-  const lines = ["---", "object: __task", "status: Not started"];
+  const lines = ["---", `object: ${(type?.name ?? "Task").toLowerCase()}`, "status: Not started"];
   if (input.priority && input.priority !== "None") lines.push(`priority: ${input.priority}`);
   if (input.schedule) lines.push(`schedule: ${yaml(input.schedule)}`);
   if (input.deadline) lines.push(`deadline: ${yaml(input.deadline)}`);

@@ -328,7 +328,7 @@ function isClipped(app: App, f: TFile): boolean {
 
 function fileIsType(app: App, f: TFile, type: { id: string; name: string; tag: string }): boolean {
   const declared = declaredType(app, f);
-  if (declared) return declared === type.id.toLowerCase() || declared === type.name.toLowerCase();
+  if (declared) return declared === type.name.toLowerCase();
   return type.tag === "weblink" && isClipped(app, f);
 }
 

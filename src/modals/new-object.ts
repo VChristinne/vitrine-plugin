@@ -84,7 +84,7 @@ export class NewObjectModal extends Modal {
 
     const yaml = (raw: string) => (/^[\w .\-/]+$/.test(raw) ? raw : JSON.stringify(raw));
     const lines = ["---"];
-    lines.push(`object: ${yaml(this.type.id)}`);
+    lines.push(`object: ${yaml(this.type.name.toLowerCase())}`);
     if (this.collection) lines.push(`collection: ${yaml(this.collection.name)}`);
     if (!nameFitsFile(title)) lines.push(`title: ${yaml(title)}`);
     for (const p of this.schema()) {
