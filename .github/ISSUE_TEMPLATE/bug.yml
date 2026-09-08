@@ -1,4 +1,4 @@
-name: Bug report
+name: Bug Report
 description: Something in Vitrine misbehaves
 labels: ["bug"]
 body:

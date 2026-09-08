@@ -1,26 +1,32 @@
-name: Idea
+name: Feature Request
 description: Suggest something Vitrine could do
-labels: ["idea"]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Vitrine is shaped around one person's vault, so ideas are welcome but land
+        Vitrine is shaped around one person's vault, so requests are welcome but land
         only when they fit that shape. Saying what you are trying to do beats saying
-        which feature to add.
+        which feature to add — the workflow is what gets designed for.
   - type: textarea
     id: problem
     attributes:
       label: What are you trying to do
-      description: The workflow you are after, not the feature you have in mind for it.
+      description: The workflow you are after, and what makes it awkward today.
     validations:
       required: true
   - type: textarea
     id: idea
     attributes:
       label: What you have in mind
+      description: How you picture it working. Rough is fine.
     validations:
       required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do instead today
+      description: The workaround you live with, if there is one.
   - type: checkboxes
     id: checks
     attributes:
