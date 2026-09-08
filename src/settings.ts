@@ -18,7 +18,12 @@ export function migrateSettings(raw: unknown): VitrineSettings {
   settings.taskNotify ??= { ...(settings as { reminders?: { notify?: typeof DEFAULT_SETTINGS.taskNotify } }).reminders?.notify ?? DEFAULT_SETTINGS.taskNotify };
   delete (settings as { reminders?: unknown }).reminders;
   delete (settings as { wikipedia?: unknown }).wikipedia;
-  for (const k of ["korean", "pdf", "export", "sidebarHub", "libraries", "displayFont", "bodyFont", "accent", "accentColor"]) delete (settings as unknown as Record<string, unknown>)[k];
+  const RETIRED = [
+    "korean", "pdf", "export", "sidebarHub", "libraries", "displayFont", "bodyFont", "accent", "accentColor",
+    "dashboard", "browse", "timeline", "dossier", "insights", "planning", "folders", "stats", "pageCounts",
+    "openDashboardOnStartup",
+  ];
+  for (const k of RETIRED) delete (settings as unknown as Record<string, unknown>)[k];
 
   for (const q of settings.queries ?? []) {
     const sort = q.sort as unknown;

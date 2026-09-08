@@ -185,7 +185,9 @@ export default class VitrinePlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = migrateSettings(await this.loadData());
+    const raw = (await this.loadData()) as Record<string, unknown> | null;
+    this.settings = migrateSettings(raw);
+    if (raw && Object.keys(raw).some((k) => !(k in this.settings))) await this.saveQuiet();
   }
 
   async saveSettings() {
