@@ -37,7 +37,7 @@ const out = await build({
 });
 const file = join(mkdtempSync(join(tmpdir(), "vtr-cal-")), "calendar.mjs");
 writeFileSync(file, out.outputFiles[0].text);
-const { byDate } = await import(pathToFileURL(file).href);
+const { byDate, hasTaskItems } = await import(pathToFileURL(file).href);
 
 const DAY = "2026-08-27";
 const ms = (iso) => Date.parse(`${iso}T12:00:00Z`);
@@ -84,4 +84,18 @@ test("a type hidden from the calendar stays out of every list", () => {
   assert.equal(idx.placed.size, 0);
   assert.equal(idx.dated.size, 0);
   assert.equal(idx.created.size, 0);
+});
+
+// The Day view scans notes for checkbox lines naming that date. Reading every note
+// in the vault to find them is the whole cost, so the metadata cache decides who is
+// worth opening: no task list item, no read.
+test("a note with a checkbox is worth reading", () => {
+  assert.ok(hasTaskItems({ listItems: [{ task: " " }] }));
+  assert.ok(hasTaskItems({ listItems: [{}, { task: "x" }] }));
+});
+
+test("a note with no checkbox is skipped, cache or no cache", () => {
+  assert.ok(!hasTaskItems({ listItems: [{}, {}] }));
+  assert.ok(!hasTaskItems({}));
+  assert.ok(!hasTaskItems(null));
 });

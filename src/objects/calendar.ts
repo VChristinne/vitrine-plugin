@@ -293,6 +293,10 @@ function parseRef(text: string, forms: string[]): { title: string; time: string;
   return { title: title || text, time, recur };
 }
 
+export function hasTaskItems(cache: { listItems?: { task?: string }[] } | null): boolean {
+  return !!cache?.listItems?.some((li) => li.task !== undefined);
+}
+
 async function fillDateRefs(
   app: App,
   box: HTMLElement,
@@ -302,6 +306,8 @@ async function fillDateRefs(
 ) {
   const hits: { file: TFile; text: string; done: boolean }[] = [];
   for (const f of app.vault.getMarkdownFiles()) {
+    if (!box.isConnected) return;
+    if (!hasTaskItems(app.metadataCache.getFileCache(f))) continue;
     const raw = await app.vault.cachedRead(f);
     if (!forms.some((v) => raw.includes(v))) continue;
     for (const line of raw.split("\n")) {
