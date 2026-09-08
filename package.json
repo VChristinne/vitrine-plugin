@@ -1,6 +1,6 @@
 {
   "name": "vitrine",
-  "version": "0.9.24",
+  "version": "0.10.0",
   "description": "Turns your notes into typed objects (pages, tasks, weblinks and your own types) with collections, saved queries, a calendar and per-type property schemas, all driven by frontmatter.",
   "private": true,
   "type": "module",
