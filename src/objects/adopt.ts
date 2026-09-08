@@ -65,3 +65,12 @@ export async function release(app: App, paths: string[]): Promise<void> {
     if (f instanceof TFile) await setField(app, f, "object", undefined);
   }
 }
+
+export type RenameKind = "noop" | "clash" | "cosmetic" | "rewrite";
+
+export function renameCheck(otherNames: string[], from: string, to: string): RenameKind {
+  const next = to.trim();
+  if (!next || next === from) return "noop";
+  if (otherNames.some((n) => n.toLowerCase() === next.toLowerCase())) return "clash";
+  return next.toLowerCase() === from.toLowerCase() ? "cosmetic" : "rewrite";
+}

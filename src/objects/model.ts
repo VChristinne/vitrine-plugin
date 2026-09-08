@@ -217,12 +217,6 @@ export function typeConfigs(plugin: VitrinePlugin): ObjectTypeConfig[] {
       changed = true;
     }
   }
-  const pages = cfgs.find((c) => c.id === "__pages");
-  if (pages && (pages.name !== "Page" || pages.namePlural !== "Pages")) {
-    pages.name = "Page";
-    pages.namePlural = "Pages";
-    changed = true;
-  }
   if (changed) void plugin.saveSettings();
   return cfgs;
 }

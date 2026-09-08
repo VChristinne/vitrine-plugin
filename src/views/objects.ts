@@ -3,7 +3,7 @@ import { mountView, objectSurface } from "../render/theme";
 import { renderCalendar } from "../objects/calendar";
 import type { CalView } from "../objects/calendar";
 import { NewObjectModal } from "../modals/new-object";
-import { adopt, candidates, matches, release, type AdoptBy } from "../objects/adopt";
+import { adopt, candidates, matches, release, renameCheck, type AdoptBy } from "../objects/adopt";
 import { WeblinkModal } from "../modals/weblink";
 import { promptText } from "../modals/prompt";
 import { ensureFolder, freePath, safeName } from "../paths";
@@ -1607,6 +1607,28 @@ export class ObjectsView extends ItemView {
     this.go({ screen: "type", typeId: id });
   }
 
+  private async renameType(c: ObjectTypeConfig, next: string) {
+    const others = typeConfigs(this.plugin).filter((t) => t !== c).map((t) => t.name);
+    const kind = renameCheck(others, c.name, next);
+    if (kind === "noop") return;
+    if (kind === "clash") {
+      new Notice(`Another type is already called ${next.trim()}.`);
+      this.render();
+      return;
+    }
+    const from = c.name.toLowerCase();
+    const files = kind === "rewrite"
+      ? this.app.vault.getMarkdownFiles().filter((f) => declaredType(this.app, f) === from)
+      : [];
+    c.name = next.trim();
+    await this.plugin.saveSettings();
+    if (files.length) {
+      await adopt(this.app, files, c.name.toLowerCase());
+      new Notice(`${files.length} note${files.length === 1 ? "" : "s"} now say object: ${c.name.toLowerCase()}.`);
+    }
+    this.render();
+  }
+
   private deleteType(c: ObjectTypeConfig) {
     const configs = typeConfigs(this.plugin);
     const i = configs.indexOf(c);
@@ -1681,7 +1703,7 @@ export class ObjectsView extends ItemView {
           void this.saveTypes();
         }).open();
     }
-    textInput(field("Name", true), c.name, "Name", (v) => ((c.name = v || c.name), this.saveTypes()));
+    textInput(field("Name", true), c.name, "Name", (v) => void this.renameType(c, v));
     if (!c.builtin) textInput(field("Plural of name", true), c.namePlural ?? "", "Plural", (v) => ((c.namePlural = v || undefined), this.saveTypes()));
 
     const row2 = main.createDiv({ cls: "vtr-objects-fields" });

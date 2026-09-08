@@ -26,7 +26,7 @@ const stub = {
 const out = join(mkdtempSync(join(tmpdir(), "vtr-adopt-")), "adopt.mjs");
 const res = await build({ entryPoints: ["src/objects/adopt.ts"], bundle: true, format: "esm", write: false, plugins: [stub] });
 writeFileSync(out, res.outputFiles[0].text);
-const { groupsOf, candidates, matches } = await import(pathToFileURL(out).href);
+const { groupsOf, candidates, matches, renameCheck } = await import(pathToFileURL(out).href);
 
 // path → { tags, frontmatter }
 const VAULT = {
@@ -78,4 +78,26 @@ test("notes already claimed by a type come back flagged, not hidden", () => {
 
 test("a tag matches with or without the hash", () => {
   assert.equal(matches(app, "tag", "#game", typed).length, 2);
+});
+
+// Renaming a type rewrites its notes, because the name IS how a note joins it.
+// The three cases that must not trigger that rewrite are what this pins down.
+test("renaming to a name another type holds is refused", () => {
+  assert.equal(renameCheck(["Book", "Game"], "WAG", "Game"), "clash");
+  assert.equal(renameCheck(["Book", "Game"], "WAG", "game"), "clash");
+});
+
+test("changing only the case does not touch the notes", () => {
+  assert.equal(renameCheck([], "WAG", "wag"), "cosmetic");
+  assert.equal(renameCheck([], "Book", "BOOK"), "cosmetic");
+});
+
+test("an empty or unchanged name does nothing at all", () => {
+  assert.equal(renameCheck([], "Book", "Book"), "noop");
+  assert.equal(renameCheck([], "Book", "   "), "noop");
+});
+
+test("a real rename rewrites", () => {
+  assert.equal(renameCheck(["Game"], "WAG", "Shop"), "rewrite");
+  assert.equal(renameCheck([], "WAG", " Shop "), "rewrite");
 });
