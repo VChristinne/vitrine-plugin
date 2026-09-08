@@ -36,7 +36,7 @@ const { trimSite } = await import(pathToFileURL(out).href);
 test("the site's own name is dropped from the tail", () => {
   assert.equal(trimSite("Tenerife airport disaster - Wikipedia", "Wikipedia"), "Tenerife airport disaster");
   assert.equal(trimSite("Zed is now open source | Zed Blog", "Zed Blog"), "Zed is now open source");
-  assert.equal(trimSite("anthropics/claude-code · GitHub", "github.com"), "anthropics/claude-code");
+  assert.equal(trimSite("obsidianmd/obsidian-api · GitHub", "github.com"), "obsidianmd/obsidian-api");
 });
 
 test("a tail that isn't the site stays", () => {

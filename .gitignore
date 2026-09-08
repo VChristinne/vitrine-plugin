@@ -158,5 +158,3 @@ connections.json
 *.bak
 
 RELEASE.md
-CLAUDE.md
-.claude/
