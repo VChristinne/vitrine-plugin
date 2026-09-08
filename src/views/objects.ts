@@ -114,6 +114,7 @@ export class ObjectsView extends ItemView {
     sideCollapsed: false,
   };
 
+  private typeTab: Record<string, string> = {};
   private pendingQueryFilter = false;
   private pendingSubpath: string | undefined;
   private pendingQuickAddFocus = false;
@@ -1501,7 +1502,8 @@ export class ObjectsView extends ItemView {
       return;
     }
 
-    const crumb = main.createDiv({ cls: "vtr-objects-crumbs" });
+    const head = main.createDiv({ cls: "vtr-objects-thead" });
+    const crumb = head.createDiv({ cls: "vtr-objects-crumbs" });
     const back = crumb.createSpan({ cls: "vtr-objects-crumb", text: "Object types" });
     back.onclick = () => this.go({ screen: "structure" });
     crumb.createSpan({ cls: "vtr-objects-sep", text: "/" });
@@ -1509,6 +1511,23 @@ export class ObjectsView extends ItemView {
     pill.style.setProperty("--hue", c.color);
     setIcon(pill.createSpan(), c.icon);
     pill.createSpan({ text: c.name });
+
+    if (!c.builtin) {
+      const more = head.createDiv({ cls: "vtr-objects-select-btn" });
+      setIcon(more, "more-horizontal");
+      more.setAttr("aria-label", "More");
+      more.onclick = (e) => {
+        const menu = new Menu();
+        menu.addItem((i) =>
+          i
+            .setTitle("Delete object type")
+            .setIcon("trash-2")
+            .setWarning(true)
+            .onClick(() => this.deleteType(c)),
+        );
+        menu.showAtMouseEvent(e);
+      };
+    }
 
     const fields = main.createDiv({ cls: "vtr-objects-fields" });
     const field = (label: string, grow = false) => {
@@ -1554,29 +1573,51 @@ export class ObjectsView extends ItemView {
       descWrap.createDiv({ cls: "vtr-objects-flabel", text: "Description" });
       textInput(descWrap, c.description ?? "", "Your description for this object type", (v) => ((c.description = v || undefined), this.saveTypes()));
     }
-    main.createDiv({ cls: "vtr-objects-sub", text: "Configuration" });
-    main.createDiv({ cls: "vtr-objects-note", text: "Customise how objects of this type look and behave across pages, cards, and the calendar." });
 
-    const section = (title: string, build: (body: HTMLElement) => void, open = false) => {
-      const sec = main.createEl("details", { cls: "vtr-objects-cfgsec" });
-      if (open) sec.setAttr("open", "");
-      const sum = sec.createEl("summary", { cls: "vtr-objects-cfgsec-h" });
-      setIcon(sum.createSpan(), "sliders-horizontal");
-      sum.createSpan({ text: title });
-      build(sec.createDiv({ cls: "vtr-objects-cfgsec-b" }));
-    };
+    const TABS = ["Properties", ...(c.builtin ? [] : ["Templates"]), "Appearance", "Calendar", "New notes"];
+    const counts: Record<string, number> = { Properties: c.props.length, Templates: templatePaths(c).length };
+    const active = TABS.includes(this.typeTab[c.id]) ? this.typeTab[c.id] : TABS[0];
+    const bar = main.createDiv({ cls: "vtr-objects-tabbar" });
+    for (const name of TABS) {
+      const tab = bar.createSpan({ cls: active === name ? "is-on" : "" });
+      tab.createSpan({ text: name });
+      if (counts[name]) tab.createEl("i", { cls: "vtr-objects-tabn", text: String(counts[name]) });
+      tab.onclick = () => {
+        this.typeTab[c.id] = name;
+        this.render();
+      };
+    }
+    const body = main.createDiv({ cls: "vtr-objects-tabbody" });
 
     const seg = <T>(parent: HTMLElement, label: string, options: readonly (readonly [string, T])[], value: T, onPick: (v: T) => void) => {
       const wrap = parent.createDiv({ cls: "vtr-objects-segrow" });
       wrap.createDiv({ cls: "vtr-objects-flabel", text: label });
-      const bar = wrap.createDiv({ cls: "vtr-objects-segbtn" });
+      const segbar = wrap.createDiv({ cls: "vtr-objects-segbtn" });
       for (const [text, v] of options) {
-        const span = bar.createSpan({ cls: value === v ? "is-on" : "", text });
+        const span = segbar.createSpan({ cls: value === v ? "is-on" : "", text });
         span.onclick = () => onPick(v);
       }
     };
 
-    section("Page", (body) => {
+    if (active === "Properties") {
+      if (c.builtin) {
+        const lock = body.createDiv({ cls: "vtr-objects-lock" });
+        setIcon(lock.createSpan(), "info");
+        lock.createSpan({ text: "Properties of basic object types can't be edited." });
+      } else {
+        if ((c.collections ?? []).some((col) => col.props?.length)) {
+          body.createDiv({ cls: "vtr-objects-note", text: "Base properties. Collections with their own schema override these." });
+        }
+        this.renderPropList(body, c.props, (key) => (c.dropped = [...new Set([...(c.dropped ?? []), key])]));
+      }
+    }
+
+    if (active === "Templates") {
+      body.createDiv({ cls: "vtr-objects-note", text: "A template prefills this type's properties and content when you create a new object." });
+      this.renderTemplateList(body, templatePaths(c), (p) => { c.templates = p; c.templatePath = undefined; });
+    }
+
+    if (active === "Appearance") {
       body.createDiv({ cls: "vtr-objects-flabel", text: "Page layout" });
       body.createDiv({ cls: "vtr-objects-note", text: "How an object of this type opens." });
       const pick = body.createDiv({ cls: "vtr-objects-layoutpick" });
@@ -1596,9 +1637,8 @@ export class ObjectsView extends ItemView {
       seg(body, "Wide layout", [["Use normal", false], ["Use wide", true]] as const, c.wide ?? false, (v) => ((c.wide = v), this.saveTypes()));
       seg(body, "Cover image mode", [["Small", "small"], ["Wide", "wide"]] as const, c.coverMode ?? "small", (v) => ((c.coverMode = v), this.saveTypes()));
       seg(body, "Cover image display", [["Full", "full"], ["Crop", "crop"]] as const, c.cover ?? "crop", (v) => ((c.cover = v), this.saveTypes()));
-    }, true);
 
-    section("Card view and linking", (body) => {
+      body.createDiv({ cls: "vtr-objects-sub", text: "Card and linking" });
       body.createDiv({ cls: "vtr-objects-flabel", text: "Customise card view" });
       body.createDiv({ cls: "vtr-objects-note", text: "Set which properties should be shown on the small card view." });
       const editBtn = body.createDiv({ cls: "vtr-objects-select" });
@@ -1625,51 +1665,22 @@ export class ObjectsView extends ItemView {
       const reset = lvRow.createDiv({ cls: "vtr-objects-select-btn" });
       reset.setText("Reset");
       reset.onclick = () => { c.linkView = "link"; this.saveTypes(); };
-    });
+    }
 
-    section("Calendar", (body) => {
+    if (active === "Calendar") {
       seg(body, "Create object from calendar", [["Show", "show"], ["Hide", "hide"]] as const, c.calCreate ?? "hide", (v) => ((c.calCreate = v), this.saveTypes()));
       body.createDiv({ cls: "vtr-objects-note", text: "Show a per-day button in the calendar to create an object of this type." });
       seg(body, "Objects in calendar", [["Show", false], ["Hide", true]] as const, c.calHidden ?? false, (v) => ((c.calHidden = v), this.saveTypes()));
       body.createDiv({ cls: "vtr-objects-note", text: "Hide this type's objects from the calendar." });
-    });
-
-    main.createDiv({ cls: "vtr-objects-sub", text: "New notes" });
-    main.createDiv({ cls: "vtr-objects-note", text: "Folder where a new object of this type is created. Empty means the vault root (or the template's folder)." });
-    const nf = main.createDiv({ cls: "vtr-objects-fields" }).createDiv({ cls: "vtr-objects-field is-grow" });
-    nf.createDiv({ cls: "vtr-objects-flabel", text: "Folder" });
-    const nfi = nf.createEl("input", { cls: "vtr-objects-finput", type: "text", attr: { placeholder: "e.g. Clippings" } });
-    nfi.value = c.newNoteFolder ?? "";
-    nfi.onblur = () => ((c.newNoteFolder = nfi.value.trim() || undefined), this.saveTypes());
-
-    main.createDiv({ cls: "vtr-objects-sub", text: "Properties" });
-    if (c.builtin) {
-      const lock = main.createDiv({ cls: "vtr-objects-lock" });
-      setIcon(lock.createSpan(), "info");
-      lock.createSpan({ text: "Properties of basic object types can't be edited." });
-    } else {
-      if ((c.collections ?? []).some((col) => col.props?.length)) {
-        main.createDiv({ cls: "vtr-objects-note", text: "Base properties. Collections with their own schema override these." });
-      }
-      this.renderPropList(main, c.props, (key) => (c.dropped = [...new Set([...(c.dropped ?? []), key])]));
     }
 
-    if (!c.builtin) {
-      main.createDiv({ cls: "vtr-objects-sub", text: "Templates" });
-      main.createDiv({ cls: "vtr-objects-note", text: "A template prefills this type's properties and content when you create a new object." });
-      this.renderTemplateList(main, templatePaths(c), (p) => { c.templates = p; c.templatePath = undefined; });
-    }
-
-    if (!c.builtin) {
-      main.createDiv({ cls: "vtr-objects-sub", text: "Delete object type" });
-      main.createDiv({
-        cls: "vtr-objects-danger-note",
-        text: "Removes the type from the hub. Your notes stay untouched; only this type definition is deleted.",
-      });
-      const del = main.createDiv({ cls: "vtr-objects-danger" });
-      setIcon(del.createSpan(), "trash-2");
-      del.createSpan({ text: "Delete object type" });
-      del.onclick = () => this.deleteType(c);
+    if (active === "New notes") {
+      body.createDiv({ cls: "vtr-objects-note", text: "Folder where a new object of this type is created. Empty means the vault root (or the template's folder)." });
+      const nf = body.createDiv({ cls: "vtr-objects-fields" }).createDiv({ cls: "vtr-objects-field is-grow" });
+      nf.createDiv({ cls: "vtr-objects-flabel", text: "Folder" });
+      const nfi = nf.createEl("input", { cls: "vtr-objects-finput", type: "text", attr: { placeholder: "e.g. Clippings" } });
+      nfi.value = c.newNoteFolder ?? "";
+      nfi.onblur = () => ((c.newNoteFolder = nfi.value.trim() || undefined), this.saveTypes());
     }
   }
 

@@ -1065,10 +1065,6 @@ body.vtr-hide-tabs.mod-macos:is(.is-frameless, .is-hidden-frameless):not(.is-ful
 .vtr-objects-addtpl svg { width: 14px; height: 14px; display: block; }
 .vtr-objects-addtpl:hover { text-decoration: underline; }
 
-.vtr-objects-danger { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 9px; background: #c0392b; color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; }
-.vtr-objects-danger svg { width: 14px; height: 14px; }
-.vtr-objects-danger:hover { filter: brightness(1.08); }
-.vtr-objects-danger-note { color: var(--vtr-dim); font-size: 12.5px; max-width: 60ch; margin-bottom: 12px; }
 
 .vtr-objects-typepill { display: inline-flex; align-items: center; gap: 7px; padding: 3px 11px; border-radius: 7px; font-size: 13px; font-weight: 600; background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 16%, transparent); color: var(--hue, var(--vtr-accent)); }
 .vtr-objects-typepill svg { width: 13px; height: 13px; }
@@ -1486,14 +1482,14 @@ body.vtr-objects-active .workspace-tab-header.is-active::before, body.vtr-object
 .vtr-objects .vtr-cal-empty-sub { font-size: 13.5px; }
 
 /* B) Type-editor Configuration sections (<details>/<summary>) */
-.vtr-objects .vtr-objects-cfgsec { border: 1px solid var(--vtr-line); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
-.vtr-objects .vtr-objects-cfgsec-h { display: flex; align-items: center; gap: 9px; padding: 13px 15px; cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; background: var(--vtr-canvas); position: relative; }
-.vtr-objects .vtr-objects-cfgsec-h::-webkit-details-marker { display: none; }
-.vtr-objects .vtr-objects-cfgsec-h svg { width: 16px; height: 16px; color: var(--vtr-dim); }
-.vtr-objects .vtr-objects-cfgsec-h::after { content: ""; margin-left: auto; width: 7px; height: 7px; border-right: 1.5px solid var(--vtr-dim); border-bottom: 1.5px solid var(--vtr-dim); transform: rotate(45deg); transition: transform .15s ease; }
-.vtr-objects .vtr-objects-cfgsec[open] .vtr-objects-cfgsec-h::after { transform: rotate(-135deg); }
-.vtr-objects .vtr-objects-cfgsec[open] .vtr-objects-cfgsec-h { border-bottom: 1px solid var(--vtr-line); }
-.vtr-objects .vtr-objects-cfgsec-b { padding: 14px 15px; display: flex; flex-direction: column; gap: 14px; }
+.vtr-objects-thead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vtr-objects-tabbar { display: inline-flex; gap: 2px; padding: 3px; background: var(--vtr-panel); border-radius: 9px; margin: 22px 0 16px; max-width: 100%; overflow-x: auto; }
+.vtr-objects-tabbar > span { display: flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: 7px; font-size: 13px; color: var(--vtr-dim); cursor: pointer; white-space: nowrap; }
+.vtr-objects-tabbar > span:hover { color: var(--vtr-text); }
+.vtr-objects-tabbar > span.is-on { background: var(--vtr-bg); color: var(--vtr-text); font-weight: 600; box-shadow: 0 1px 2px rgba(15, 25, 40, .12); }
+.vtr-objects-tabn { font-size: 10.5px; font-style: normal; color: var(--vtr-faint); background: var(--vtr-canvas); border-radius: 20px; padding: 0 6px; }
+.vtr-objects-tabbody { display: flex; flex-direction: column; gap: 14px; }
+.vtr-objects-tabbody > .vtr-objects-sub:first-child { margin-top: 0; }
 .vtr-objects .vtr-objects-segrow { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .vtr-objects .vtr-objects-segrow .vtr-objects-flabel { margin: 0; }
 
