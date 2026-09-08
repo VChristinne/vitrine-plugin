@@ -1,10 +1,24 @@
 <!--
-Vitrine does not take pull requests. It is a personal plugin, developed in one
-vault, and this repository publishes it rather than opening it up — a PR here is
-closed unread, and that is a waste of your time, not a judgement of your work.
+Vitrine is a personal plugin shaped around one vault, so a change lands only when
+it fits that shape. Fill the three sections below — a bot checks them and asks for
+what is missing. Delete these comments as you go.
 
-Open an issue instead: a bug report gets fixed, an idea gets considered.
-https://github.com/VChristinne/vitrine-plugin/issues/new/choose
-
-You are of course free to fork it and take it wherever you like — the licence is MIT.
+If you are fixing something small, an issue works too, and costs you less.
 -->
+
+## What this does
+
+<!-- The change itself, in plain words. What behaves differently after it? -->
+
+## Why
+
+<!-- The problem it solves. If there is an issue for it, link it here. -->
+
+## How to test
+
+<!-- The steps to see it working in a vault: what to open, click, expect. -->
+
+---
+
+- [ ] I ran `npm run build` and `npm test`, both pass
+- [ ] I did not edit `styles.css` by hand (it is generated from `styles/`)

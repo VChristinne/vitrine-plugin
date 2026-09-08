@@ -1,0 +1,45 @@
+name: Pull request checklist
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  check:
+    if: github.event.pull_request.user.login != github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const SECTIONS = ["What this does", "Why", "How to test"];
+            const MARKER = "<!-- pr-checklist -->";
+            const LABEL = "needs-info";
+            const pr = context.payload.pull_request;
+            const issue = { owner: context.repo.owner, repo: context.repo.repo, issue_number: pr.number };
+
+            // Guidance comments and the checklist below the rule are not an explanation.
+            const body = (pr.body || "").replace(/<!--[\s\S]*?-->/g, "").split(/^---$/m)[0];
+            const missing = SECTIONS.filter((name) => {
+              const m = body.match(new RegExp(`^#{1,3}\\s*${name}\\s*$([\\s\\S]*?)(?=^#{1,3}\\s|$(?![\\s\\S]))`, "im"));
+              return !m || m[1].replace(/[-*\s]/g, "").length < 20;
+            });
+
+            const comments = await github.rest.issues.listComments({ ...issue, per_page: 100 });
+            const mine = comments.data.find((c) => c.body.includes(MARKER));
+            const labels = pr.labels.map((l) => l.name);
+
+            if (missing.length) {
+              const list = missing.map((s) => `- **${s}**`).join("\n");
+              const text = `${MARKER}\nThanks for the pull request. Before it can be reviewed, the description still needs:\n\n${list}\n\nEdit the description and this note updates itself — no need to push anything.`;
+              if (mine) await github.rest.issues.updateComment({ ...issue, comment_id: mine.id, body: text });
+              else await github.rest.issues.createComment({ ...issue, body: text });
+              if (!labels.includes(LABEL)) await github.rest.issues.addLabels({ ...issue, labels: [LABEL] });
+            } else {
+              if (mine) await github.rest.issues.updateComment({ ...issue, comment_id: mine.id, body: `${MARKER}\nDescription is complete — thanks. It is in the queue for review.` });
+              if (labels.includes(LABEL)) await github.rest.issues.removeLabel({ ...issue, name: LABEL });
+            }
