@@ -1,0 +1,65 @@
+name: Bug report
+description: Something in Vitrine misbehaves
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Vitrine is a pre-1.0 beta built for one vault, so it meets setups it has
+        never seen. The more of the boxes below you fill, the likelier it gets fixed.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the hub
+        2. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Vitrine version
+      description: Settings → Community plugins → Vitrine.
+    validations:
+      required: true
+  - type: input
+    id: obsidian
+    attributes:
+      label: Obsidian version
+      description: Settings → About → Current version.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Desktop (macOS)
+        - Desktop (Windows)
+        - Desktop (Linux)
+        - Mobile (iOS)
+        - Mobile (Android)
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Ctrl/Cmd + Shift + I → Console. Paste anything in red.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this one is new.
+          required: true
+        - label: It still happens with my other community plugins disabled.
