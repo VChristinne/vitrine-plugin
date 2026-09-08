@@ -310,7 +310,7 @@ function objectsForTag(app: App, tag: string): TFile[] {
   });
 }
 
-function declaredType(app: App, f: TFile): string {
+export function declaredType(app: App, f: TFile): string {
   const fm = app.metadataCache.getFileCache(f)?.frontmatter;
   const v = fm?.object ?? fm?.type;
   return v ? String(v).trim().toLowerCase() : "";

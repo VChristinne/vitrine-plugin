@@ -3,6 +3,7 @@ import { mountView, objectSurface } from "../render/theme";
 import { renderCalendar } from "../objects/calendar";
 import type { CalView } from "../objects/calendar";
 import { NewObjectModal } from "../modals/new-object";
+import { adopt, candidates, matches, release, type AdoptBy } from "../objects/adopt";
 import { WeblinkModal } from "../modals/weblink";
 import { promptText } from "../modals/prompt";
 import { ensureFolder, freePath, safeName } from "../paths";
@@ -33,6 +34,7 @@ import {
   templatesForType,
   collectionOf,
   collectionsOf,
+  declaredType,
   pluralName,
   inCollection,
   hueFor,
@@ -115,6 +117,10 @@ export class ObjectsView extends ItemView {
   };
 
   private typeTab: Record<string, string> = {};
+  private adoptBy: AdoptBy = "folder";
+  private adoptValue = "";
+  private adoptSkip = new Set<string>();
+  private lastAdopt: { paths: string[]; type: string } | null = null;
   private pendingQueryFilter = false;
   private pendingSubpath: string | undefined;
   private pendingQuickAddFocus = false;
@@ -833,7 +839,7 @@ export class ObjectsView extends ItemView {
 
     if (!objs.length) {
       if (coll) this.empty(main, "folder", `Nothing in ${coll.name} yet`, `Use New ${type.name} to add one — it joins this collection.`);
-      else this.empty(main, type.icon, `No ${pluralName(type).toLowerCase()} yet`, `Use New ${type.name} to create one.`);
+      else this.renderTypeEmpty(main, type);
       return;
     }
 
@@ -1112,6 +1118,125 @@ export class ObjectsView extends ItemView {
     const c = (cfg.collections ?? []).find((x) => x.id === id);
     if (!c) return;
     void setCollection(this.app, f, c.name, false).then(() => { new Notice(`Removed from '${c.name}'.`); this.render(); });
+  }
+
+  private renderTypeEmpty(main: HTMLElement, type: ObjectType) {
+    const box = main.createDiv({ cls: "vtr-objects-emptystate is-type" });
+    setIcon(box.createDiv({ cls: "vtr-objects-empty-icon" }), type.icon);
+    box.createDiv({ cls: "vtr-objects-empty-title", text: `No ${pluralName(type).toLowerCase()} yet` });
+    box.createDiv({ text: `A note becomes a ${type.name} when it carries this line, and Vitrine writes it for you.` });
+    box.createDiv({ cls: "vtr-objects-adopt-rule", text: `object: ${type.name.toLowerCase()}` });
+
+    const paths = box.createDiv({ cls: "vtr-objects-adopt-paths" });
+
+    const bring = paths.createDiv({ cls: "vtr-objects-adopt-card" });
+    bring.createDiv({ cls: "vtr-objects-adopt-h", text: "Bring notes you already have" });
+    bring.createDiv({ cls: "vtr-objects-note", text: "Add the line to notes in a folder, under a tag, or carrying a property." });
+    this.renderAdopt(bring, type);
+
+    const make = paths.createDiv({ cls: "vtr-objects-adopt-card" });
+    make.createDiv({ cls: "vtr-objects-adopt-h", text: "Write the first one" });
+    make.createDiv({ cls: "vtr-objects-note", text: `Start an empty ${type.name}, or one from a template.` });
+    const btn = make.createEl("button", { cls: "vtr-objects-pickbar-b mod-cta", text: `New ${type.name}` });
+    btn.onclick = () => new NewObjectModal(this.plugin, type, undefined).open();
+  }
+
+  private renderAdopt(parent: HTMLElement, type: ObjectType) {
+    const box = parent.createDiv({ cls: "vtr-objects-adopt" });
+    const row = box.createDiv({ cls: "vtr-objects-adopt-row" });
+    const seg = row.createDiv({ cls: "vtr-objects-segbtn" });
+    const BY = [["in folder", "folder"], ["with tag", "tag"], ["with property", "prop"]] as const;
+    for (const [label, by] of BY) {
+      const span = seg.createSpan({ cls: this.adoptBy === by ? "is-on" : "", text: label });
+      span.onclick = () => {
+        this.adoptBy = by;
+        this.adoptValue = "";
+        this.adoptSkip.clear();
+        this.render();
+      };
+    }
+
+    const HOLDER = { folder: "Choose a folder…", tag: "Choose a tag…", prop: "Choose a property…" };
+    const pick = row.createDiv({ cls: "vtr-objects-select" });
+    pick.createSpan({ text: this.adoptValue || HOLDER[this.adoptBy] });
+    setIcon(pick.createSpan({ cls: "vtr-objects-select-caret" }), "chevron-down");
+    pick.onclick = (e) => {
+      const menu = new Menu();
+      const list = candidates(this.app, this.adoptBy, (f) => !!declaredType(this.app, f)).slice(0, 30);
+      if (!list.length) menu.addItem((i) => i.setTitle("Nothing left to choose from").setDisabled(true));
+      for (const c of list) {
+        menu.addItem((i) =>
+          i.setTitle(`${c.value}  ·  ${c.count}`).onClick(() => {
+            this.adoptValue = c.value;
+            this.adoptSkip.clear();
+            this.render();
+          }),
+        );
+      }
+      menu.showAtMouseEvent(e);
+    };
+    if (!this.adoptValue) return;
+
+    const found = matches(this.app, this.adoptBy, this.adoptValue, (f) => declaredType(this.app, f));
+    const free = found.filter((m) => !m.taken);
+    const taken = found.length - free.length;
+    row.createSpan({
+      cls: "vtr-objects-adopt-n",
+      text: `${free.length} match${free.length === 1 ? "" : "es"}${taken ? ` · ${taken} already typed, skipped` : ""}`,
+    });
+
+    const list = box.createDiv({ cls: "vtr-objects-adopt-list" });
+    for (const m of free.slice(0, 8)) {
+      const li = list.createDiv();
+      const cb = li.createEl("input", { type: "checkbox" });
+      cb.checked = !this.adoptSkip.has(m.file.path);
+      cb.onchange = () => {
+        if (cb.checked) this.adoptSkip.delete(m.file.path);
+        else this.adoptSkip.add(m.file.path);
+        this.render();
+      };
+      li.createSpan({ text: title(this.app, m.file) || m.file.basename });
+      li.createSpan({ cls: "vtr-objects-adopt-p", text: m.file.parent?.path ?? "" });
+    }
+    if (free.length > 8) {
+      list.createDiv({ cls: "vtr-objects-note", text: `…and ${free.length - 8} more, all included.` });
+    }
+
+    const chosen = free.filter((m) => !this.adoptSkip.has(m.file.path)).map((m) => m.file);
+    const foot = box.createDiv({ cls: "vtr-objects-adopt-row" });
+    const go = foot.createEl("button", { cls: "vtr-objects-pickbar-b mod-cta" });
+    go.setText(`Add ${chosen.length} note${chosen.length === 1 ? "" : "s"}`);
+    go.disabled = !chosen.length;
+    go.onclick = () => void this.runAdopt(type, chosen);
+    const cancel = foot.createEl("button", { cls: "vtr-objects-pickbar-b", text: "Cancel" });
+    cancel.onclick = () => {
+      this.adoptValue = "";
+      this.adoptSkip.clear();
+      this.render();
+    };
+  }
+
+  private async runAdopt(type: ObjectType, files: TFile[]) {
+    const paths = files.map((f) => f.path);
+    await adopt(this.app, files, type.name.toLowerCase());
+    this.lastAdopt = { paths, type: type.name };
+    this.adoptValue = "";
+    this.adoptSkip.clear();
+    const frag = document.createDocumentFragment();
+    frag.appendText(`${paths.length} note${paths.length === 1 ? "" : "s"} added to ${type.name}. `);
+    const undo = frag.createEl("a", { text: "Undo" });
+    undo.onclick = () => void this.undoAdopt();
+    new Notice(frag, 12000);
+    this.plugin.refreshViews();
+  }
+
+  private async undoAdopt() {
+    const last = this.lastAdopt;
+    if (!last) return;
+    this.lastAdopt = null;
+    await release(this.app, last.paths);
+    new Notice(`${last.paths.length} note${last.paths.length === 1 ? "" : "s"} removed from ${last.type}.`);
+    this.plugin.refreshViews();
   }
 
   private renderObjects(main: HTMLElement, files: TFile[], type: ObjectType) {
@@ -1574,7 +1699,7 @@ export class ObjectsView extends ItemView {
       textInput(descWrap, c.description ?? "", "Your description for this object type", (v) => ((c.description = v || undefined), this.saveTypes()));
     }
 
-    const TABS = ["Properties", ...(c.builtin ? [] : ["Templates"]), "Appearance", "Calendar", "New notes"];
+    const TABS = ["Properties", ...(c.builtin ? [] : ["Templates"]), "Adopt", "Appearance", "Calendar", "New notes"];
     const counts: Record<string, number> = { Properties: c.props.length, Templates: templatePaths(c).length };
     const active = TABS.includes(this.typeTab[c.id]) ? this.typeTab[c.id] : TABS[0];
     const bar = main.createDiv({ cls: "vtr-objects-tabbar" });
@@ -1610,6 +1735,12 @@ export class ObjectsView extends ItemView {
         }
         this.renderPropList(body, c.props, (key) => (c.dropped = [...new Set([...(c.dropped ?? []), key])]));
       }
+    }
+
+    if (active === "Adopt") {
+      const type = objectTypes(this.plugin).find((t) => t.id === c.id);
+      body.createDiv({ cls: "vtr-objects-note", text: `Add notes you already have to this type. Vitrine writes object: ${c.name.toLowerCase()} into each one and changes nothing else.` });
+      if (type) this.renderAdopt(body, type);
     }
 
     if (active === "Templates") {
