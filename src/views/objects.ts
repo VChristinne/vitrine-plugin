@@ -1659,7 +1659,7 @@ export class ObjectsView extends ItemView {
     setIcon(pill.createSpan(), c.icon);
     pill.createSpan({ text: c.name });
 
-    if (!c.builtin) {
+    if (c.id !== "__pages") {
       const more = head.createDiv({ cls: "vtr-objects-select-btn" });
       setIcon(more, "more-horizontal");
       more.setAttr("aria-label", "More");
@@ -1689,7 +1689,7 @@ export class ObjectsView extends ItemView {
       input.onblur = () => commit(input.value.trim());
     };
 
-    if (!c.builtin) {
+    {
       const iconRow = field("Icon").createDiv({ cls: "vtr-objects-iconrow is-pick" });
       const preview = iconRow.createSpan({ cls: "vtr-objects-ico" });
       preview.style.setProperty("--hue", c.color);
@@ -1704,7 +1704,7 @@ export class ObjectsView extends ItemView {
         }).open();
     }
     textInput(field("Name", true), c.name, "Name", (v) => void this.renameType(c, v));
-    if (!c.builtin) textInput(field("Plural of name", true), c.namePlural ?? "", "Plural", (v) => ((c.namePlural = v || undefined), this.saveTypes()));
+    textInput(field("Plural of name", true), c.namePlural ?? "", "Plural", (v) => ((c.namePlural = v || undefined), this.saveTypes()));
 
     const row2 = main.createDiv({ cls: "vtr-objects-fields" });
     const colWrap = row2.createDiv({ cls: "vtr-objects-field" });
@@ -1715,13 +1715,13 @@ export class ObjectsView extends ItemView {
       s.style.background = hue;
       s.onclick = () => ((c.color = hue), this.saveTypes());
     }
-    if (!c.builtin) {
+    {
       const descWrap = row2.createDiv({ cls: "vtr-objects-field is-grow" });
       descWrap.createDiv({ cls: "vtr-objects-flabel", text: "Description" });
       textInput(descWrap, c.description ?? "", "Your description for this object type", (v) => ((c.description = v || undefined), this.saveTypes()));
     }
 
-    const TABS = ["Properties", ...(c.builtin ? [] : ["Templates"]), "Adopt", "Appearance", "Calendar", "New notes"];
+    const TABS = ["Properties", "Templates", "Adopt", "Appearance", "Calendar", "New notes"];
     const counts: Record<string, number> = { Properties: c.props.length, Templates: templatePaths(c).length };
     const active = TABS.includes(this.typeTab[c.id]) ? this.typeTab[c.id] : TABS[0];
     const bar = main.createDiv({ cls: "vtr-objects-tabbar" });
@@ -1747,16 +1747,10 @@ export class ObjectsView extends ItemView {
     };
 
     if (active === "Properties") {
-      if (c.builtin) {
-        const lock = body.createDiv({ cls: "vtr-objects-lock" });
-        setIcon(lock.createSpan(), "info");
-        lock.createSpan({ text: "Properties of basic object types can't be edited." });
-      } else {
-        if ((c.collections ?? []).some((col) => col.props?.length)) {
-          body.createDiv({ cls: "vtr-objects-note", text: "Base properties. Collections with their own schema override these." });
-        }
-        this.renderPropList(body, c.props, (key) => (c.dropped = [...new Set([...(c.dropped ?? []), key])]));
+      if ((c.collections ?? []).some((col) => col.props?.length)) {
+        body.createDiv({ cls: "vtr-objects-note", text: "Base properties. Collections with their own schema override these." });
       }
+      this.renderPropList(body, c.props, (key) => (c.dropped = [...new Set([...(c.dropped ?? []), key])]));
     }
 
     if (active === "Adopt") {

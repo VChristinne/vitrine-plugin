@@ -27,6 +27,7 @@ export interface VitrineSettings {
   objectsSurface?: ObjectsSurface;
   objectsSurfaceDark?: ObjectsSurface;
   shareProps?: Record<string, string[]>;
+  seeded?: boolean;
 }
 
 export type ObjectsSurface = "obsidian" | "neu" | "tokyo" | "latte";

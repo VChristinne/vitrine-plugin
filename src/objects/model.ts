@@ -192,7 +192,11 @@ export function typeConfigs(plugin: VitrinePlugin): ObjectTypeConfig[] {
   }
   const cfgs = plugin.settings.objectTypes;
   let changed = false;
-  for (const [id, make] of BUILTINS) {
+  if (!cfgs.some((c) => c.id === "__pages")) {
+    cfgs.push(pagesConfig());
+    changed = true;
+  }
+  for (const [id, make] of plugin.settings.seeded ? [] : BUILTINS) {
     const existing = cfgs.find((c) => c.id === id);
     if (!existing) {
       cfgs.push(make());
@@ -216,6 +220,10 @@ export function typeConfigs(plugin: VitrinePlugin): ObjectTypeConfig[] {
       existing.props = next;
       changed = true;
     }
+  }
+  if (!plugin.settings.seeded) {
+    plugin.settings.seeded = true;
+    changed = true;
   }
   if (changed) void plugin.saveSettings();
   return cfgs;

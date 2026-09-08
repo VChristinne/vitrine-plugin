@@ -239,8 +239,6 @@
 .vtr-objects-addprop svg { width: 14px; height: 14px; }
 .vtr-objects-addprop:hover { border-color: var(--vtr-accent); color: var(--vtr-accent); }
 
-.vtr-objects-lock { display: flex; align-items: center; gap: 9px; padding: 11px 14px; background: var(--vtr-panel); border-radius: 9px; color: var(--vtr-dim); font-size: 12.5px; margin: 6px 0 10px; }
-.vtr-objects-lock svg { width: 15px; height: 15px; color: var(--vtr-faint); }
 
 .vtr-objects-tpls { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
 .vtr-objects-tpl { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 20px; background: color-mix(in srgb, var(--vtr-accent) 14%, transparent); color: var(--vtr-accent); font-size: 12.5px; cursor: pointer; }
