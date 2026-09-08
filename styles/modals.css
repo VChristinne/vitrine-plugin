@@ -1,0 +1,176 @@
+/* ── Modal shell ─────────────────────────────────────────────────────────
+   Modals mount outside the hub, so the --vtr-* tokens don't reach them: they
+   carry the same `data-vtr-surface` the hub does (applyModalTheme) and derive
+   the palette here. Default = Obsidian's own colours; the neu/tokyo palettes
+   come from themes/*.css, whose selectors also match `.vtr-modal`. */
+.vtr-modal {
+  --vtr-bg: var(--background-primary);
+  --vtr-panel: var(--background-secondary);
+  --vtr-line: var(--background-modifier-border);
+  --vtr-text: var(--text-normal);
+  --vtr-dim: var(--text-muted);
+  --vtr-faint: var(--text-faint);
+  --vtr-accent: var(--interactive-accent);
+  --vtr-on-accent: var(--text-on-accent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 22%, transparent);
+
+  background: var(--vtr-bg);
+  color: var(--vtr-text);
+  border: 1px solid var(--vtr-line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 24px 64px -24px rgba(15, 25, 40, 0.45);
+  font-family: var(--font-interface);
+}
+
+.vtr-modal .modal-content {
+  margin: 0;
+  padding: 0;
+}
+
+.vtr-modal .modal-close-button {
+  top: 12px;
+  right: 14px;
+  color: var(--vtr-faint);
+}
+.vtr-modal .modal-close-button:hover {
+  color: var(--vtr-text);
+}
+
+/* Header: the object's own title, sentence case — no HUD caps. */
+.vtr-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.vtr-modal-head-title {
+  font-size: calc(17px * var(--vtr-fs, 1));
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--vtr-text);
+}
+
+/* Fields in two columns to keep the modal short; wide ones span both. */
+.vtr-modal-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+.vtr-modal-field {
+  min-width: 0;
+}
+.vtr-modal-field.is-wide {
+  grid-column: 1 / -1;
+}
+.vtr-modal-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: calc(12.5px * var(--vtr-fs, 1));
+  font-weight: 500;
+  color: var(--vtr-dim);
+}
+/* Marks a value the modal pre-filled (status → draft, dates → today). */
+.vtr-modal-auto {
+  margin-left: 7px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: calc(10.5px * var(--vtr-fs, 1));
+  font-weight: 500;
+  color: var(--vtr-accent);
+  background: color-mix(in srgb, var(--vtr-accent) 14%, transparent);
+}
+
+.vtr-modal-input {
+  border: 1px solid var(--vtr-line);
+  border-radius: 9px;
+  background: var(--vtr-bg);
+}
+.vtr-modal-input:focus-within {
+  border-color: var(--vtr-accent);
+  box-shadow: 0 0 0 3px var(--vtr-glow-soft);
+}
+.vtr-modal-input-el {
+  width: 100%;
+  height: auto !important;
+  padding: 9px 12px !important;
+  color: var(--vtr-text) !important;
+  font-family: inherit !important;
+  font-size: calc(14px * var(--vtr-fs, 1)) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.vtr-modal-input-el::placeholder {
+  color: var(--vtr-faint);
+}
+.vtr-modal-input-el:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Footer: ghost cancel + accent primary, right-aligned. */
+.vtr-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+.vtr-modal-btn {
+  cursor: pointer;
+  padding: 8px 16px;
+  border: 1px solid var(--vtr-line);
+  border-radius: 9px;
+  font-size: calc(13px * var(--vtr-fs, 1));
+  font-weight: 600;
+  color: var(--vtr-dim);
+}
+.vtr-modal-btn:hover {
+  border-color: var(--vtr-accent);
+  color: var(--vtr-accent);
+}
+.vtr-modal-btn.is-primary {
+  background: var(--vtr-accent);
+  border-color: var(--vtr-accent);
+  color: var(--vtr-on-accent);
+}
+.vtr-modal-btn.is-primary:hover {
+  color: var(--vtr-on-accent);
+  filter: brightness(1.06);
+}
+
+/* Plain-Setting modals (Steam sync, unlock date) — Obsidian's own controls. */
+.vtr-modal-title {
+  margin: 0 0 8px;
+}
+.vtr-modal-note {
+  color: var(--text-muted);
+  font-size: calc(12px * var(--vtr-fs, 1));
+  margin: 0 0 12px;
+}
+
+/* Achievement progress bar (object page). */
+.vtr-progress {
+  height: 6px;
+  background: var(--background-modifier-border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.vtr-progress-bar {
+  height: 100%;
+  width: 0;
+  background: var(--interactive-accent);
+  transition: width 0.15s ease;
+}
+
+/* Command palette (Capacities-style) — SuggestModal, centred by Obsidian. */
+.vtr-palette .prompt-input { font-size: 15px; }
+.vtr-palette .vtr-palette-row { display: flex; align-items: center; gap: 12px; }
+.vtr-palette .vtr-palette-ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; flex: none; color: var(--hue, var(--text-muted)); background: color-mix(in srgb, var(--hue, var(--text-muted)) 14%, transparent); }
+.vtr-palette .vtr-palette-ico svg { width: 16px; height: 16px; }
+.vtr-palette .vtr-palette-name { flex: 1; font-size: 14px; color: var(--text-normal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vtr-palette .vtr-palette-pill { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 3px 9px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: var(--hue, var(--text-muted)); background: color-mix(in srgb, var(--hue, var(--text-muted)) 12%, transparent); }
+.vtr-palette .vtr-palette-pill svg { width: 13px; height: 13px; }

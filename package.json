@@ -1,0 +1,19 @@
+{
+  "name": "vitrine",
+  "version": "0.9.24",
+  "description": "Turns your notes into typed objects (pages, tasks, weblinks and your own types) with collections, saved queries, a calendar and per-type property schemas, all driven by frontmatter.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.20.0",
+    "obsidian": "^1.5.7",
+    "typescript": "^5.4.0"
+  }
+}

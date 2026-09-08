@@ -1,0 +1,302 @@
+/* Vitrine — every visual decision lives here. No element.style in TypeScript. */
+
+/* No title bar on the plugin views: the tab already names them. */
+.workspace-leaf-content[data-type^="vitrine-"] .view-header {
+  display: none;
+}
+
+/* Optional: drop the tab bar of the group showing a Vitrine view. */
+body.vtr-hide-tabs
+  .workspace-tabs:has(
+    > .workspace-tab-container
+      > .workspace-leaf.mod-active
+      > .workspace-leaf-content[data-type^="vitrine-"]
+  )
+  > .workspace-tab-header-container {
+  display: none;
+}
+
+/* Silence Obsidian's body-level file-name tooltip while a Vitrine view is in front,
+   except over the collapsed hub sidebar — there the icons need their name. The
+   tooltip is a single body-level node with no trigger info, so we gate on whether
+   the collapsed sidebar is the thing being hovered. Tooltips we set on purpose are
+   tagged `.vtr-tip` (setTooltip's `classes`) so they survive this. */
+body.vtr-active:not(:has(.vtr-nav.is-collapsed:hover)) .tooltip:not(.vtr-tip) {
+  display: none !important;
+}
+
+/* ── HUD tab bar skins ─────────────────────────────────────────────────────
+   Restyle Obsidian's tab bar for the group showing a Vitrine view, scoped by the
+   same :has() the hide rule uses. Colours derive from the user's palette + accent
+   (syncTabBar mirrors them onto <body>), so custom accents and light/dark work.
+   Obsidian's own curve/radius/outline are zeroed through its --tab-* vars so the
+   shapes below land cleanly, and accent marks use box-shadow rather than ::before
+   (which Obsidian uses for the tab curve). The × position is the user's snippet. */
+
+/* palette → tab tokens (slate default; light on a light theme unless forced slate) */
+body[class*="vtr-tabs-"] {
+  --vt-bar: #141b26; --vt-tab: #1d2836; --vt-line: #2a3547;
+  --vt-text: #dbe4f0; --vt-dim: #7d8ea4;
+  --vt-accent: var(--interactive-accent); --vt-on: var(--text-on-accent);
+  --vt-glow: color-mix(in srgb, var(--vt-accent) 35%, transparent);
+}
+body.theme-light[class*="vtr-tabs-"]:not([data-vtr-palette="slate"]),
+body[class*="vtr-tabs-"][data-vtr-palette="light"] {
+  --vt-bar: #e2e7ee; --vt-tab: #d9e0e9; --vt-line: #c7d0dc;
+  --vt-text: #1e2833; --vt-dim: #5d6b7d;
+}
+body[class*="vtr-tabs-"][data-vtr-palette="slate"] {
+  --vt-bar: #141b26; --vt-tab: #1d2836; --vt-line: #2a3547;
+  --vt-text: #dbe4f0; --vt-dim: #7d8ea4;
+}
+/* shared base: neutralise Obsidian's tab shape, set the bar + text colours. */
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  > .workspace-tab-header-container {
+  --tab-curve: 0;
+  --tab-radius: 0;
+  --tab-radius-active: 0;
+  --tab-outline-width: 0px;
+  --tab-divider-color: transparent;
+  --tab-background-active: transparent;
+}
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-dim);
+}
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-text);
+}
+
+/* chamfer — each tab a chamfered chip; active fills accent */
+body.vtr-tabs-chamfer
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header {
+  background: var(--vt-tab);
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  margin: 4px 3px;
+}
+body.vtr-tabs-chamfer
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background: var(--vt-accent);
+}
+body.vtr-tabs-chamfer
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-on);
+}
+
+/* underline — flat tabs, accent underline on active (box-shadow, not a border) */
+body.vtr-tabs-underline
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  box-shadow: inset 0 -2px 0 var(--vt-accent);
+}
+body.vtr-tabs-underline
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-accent);
+}
+
+/* bracket — accent corner brackets frame the active tab */
+body.vtr-tabs-bracket
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background-image:
+    linear-gradient(var(--vt-accent), var(--vt-accent)) left top / 11px 2px no-repeat,
+    linear-gradient(var(--vt-accent), var(--vt-accent)) left top / 2px 11px no-repeat,
+    linear-gradient(var(--vt-accent), var(--vt-accent)) right bottom / 11px 2px no-repeat,
+    linear-gradient(var(--vt-accent), var(--vt-accent)) right bottom / 2px 11px no-repeat;
+}
+
+/* rail — tabs joined in one strip, dividers between, active fills accent */
+body.vtr-tabs-rail
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header + .workspace-tab-header {
+  border-left: 1px solid var(--vt-line);
+}
+body.vtr-tabs-rail
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background: var(--vt-accent);
+}
+body.vtr-tabs-rail
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-on);
+}
+
+/* notch — folder-tab shape; active lifts with an accent top edge */
+body.vtr-tabs-notch
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header {
+  background: var(--vt-tab);
+  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 100%, 0 100%);
+  margin: 4px 1px 0;
+}
+body.vtr-tabs-notch
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background: var(--vt-bar);
+  box-shadow: inset 0 2px 0 var(--vt-accent);
+}
+
+/* Drop Obsidian's tab-bar action buttons (new tab, tab-list dropdown) on a styled
+   Vitrine bar — they clutter the HUD and offset the centred layout. */
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  :is(.workspace-tab-header-new-tab, .workspace-tab-header-tab-list) {
+  display: none;
+}
+/* And the sidebar expand/collapse toggles in the title bar (the "expand" icons).
+   Sidebars can still be toggled by hotkey/command. */
+body[class*="vtr-tabs-"] .sidebar-toggle-button {
+  display: none;
+}
+
+/* centered layout — tabs float as a centred group and grow outward, Safari-compact
+   style. The strip fills the bar only so the group can centre in it; the tabs keep a
+   compact width, gain breathing room (floating), and centre their label. */
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-container-inner {
+  flex-grow: 1;
+  justify-content: center;
+}
+/* Obsidian's spacer normally eats the leftover width, pinning tabs left — stop it. */
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-spacer {
+  flex-grow: 0;
+}
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header {
+  min-width: 190px;
+  max-width: 300px;
+}
+/* Inner spans the pill so the title fills and centres; icon/close pin to the ends. */
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-inner {
+  width: 100%;
+}
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-inner-title {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* tick — thin tabs; active carries an accent tick flush to a border. Side is a
+   setting (default right, since the close × usually lives on the left). */
+body.vtr-tabs-tick
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  color: var(--vt-text);
+}
+
+/* With the tab bar hidden the view rises to the window top. On a macOS frameless
+   window — but NOT fullscreen, where there are no controls — the traffic lights
+   sit there. Obsidian zeroes --titlebar-height once the tab bar (its usual drag
+   handle) is gone, so this reserves a fixed strip; tune 40px if it feels tight. */
+body.vtr-hide-tabs.mod-macos:is(.is-frameless, .is-hidden-frameless):not(.is-fullscreen)
+  .workspace-leaf-content[data-type^="vitrine-"] .view-content {
+  position: relative;
+}
+
+/* Pad the columns (rail, sidebar, main), not the outer view, so each keeps its
+   own background to the top while its content drops clear of the controls. */
+body.vtr-hide-tabs.mod-macos:is(.is-frameless, .is-hidden-frameless):not(.is-fullscreen)
+  .workspace-leaf-content[data-type^="vitrine-"] .view-content > * {
+  padding-top: 40px;
+}
+
+/* That reserved strip becomes a real titlebar: -webkit-app-region: drag is the
+   native mechanism Obsidian's own titlebar uses, so the window drags from here
+   again. The strip is empty (content sits below it), so nothing is caught. */
+body.vtr-hide-tabs.mod-macos:is(.is-frameless, .is-hidden-frameless):not(.is-fullscreen)
+  .workspace-leaf-content[data-type^="vitrine-"] .view-content::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 40px;
+  -webkit-app-region: drag;
+  z-index: 10;
+}
+
+/* Themes may paint .view-content over us; the background belongs to the plugin.
+   Prefix selector so every vitrine view (reminders, game, …) is covered. */
+.workspace-leaf-content[data-type^="vitrine-"] .view-content {
+  background-color: var(--vtr-bg);
+  padding: 0;
+}
+
+.vtr {
+  --vtr-bg: #19212e;
+  --vtr-rail: #141b26;
+  --vtr-panel: #1d2836;
+  --vtr-line: #2a3547;
+  --vtr-text: #dbe4f0;
+  --vtr-dim: #7d8ea4;
+  --vtr-faint: #4f6076;
+  --vtr-accent: var(--interactive-accent);
+  --vtr-on-accent: var(--text-on-accent);
+  --vtr-cut: 14px;
+  /* Neon: the accent with alpha, used for text, border and clip-path glow. */
+  --vtr-glow: color-mix(in srgb, var(--vtr-accent) 65%, transparent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 35%, transparent);
+
+  display: flex;
+  height: 100%;
+  background: var(--vtr-bg);
+  color: var(--vtr-text);
+  font-family: var(--font-interface);
+  font-size: calc(13px * var(--vtr-fs, 1));
+  padding: 0;
+  overflow: hidden;
+}
+
+.theme-light .vtr,
+.vtr[data-palette="light"] {
+  --vtr-bg: #eef1f5;
+  --vtr-rail: #e2e7ee;
+  --vtr-panel: #d9e0e9;
+  --vtr-line: #c7d0dc;
+  --vtr-text: #1e2833;
+  --vtr-dim: #5d6b7d;
+  --vtr-faint: #8b98a8;
+  --vtr-accent: #0f7f96;
+  --vtr-on-accent: #ffffff;
+  /* On a light background the glow has to stay subtle or it smears. */
+  --vtr-glow: color-mix(in srgb, var(--vtr-accent) 40%, transparent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 18%, transparent);
+}
+
+/* "Always slate" wins over a light theme. */
+.vtr[data-palette="slate"] {
+  --vtr-bg: #19212e;
+  --vtr-rail: #141b26;
+  --vtr-panel: #1d2836;
+  --vtr-line: #2a3547;
+  --vtr-text: #dbe4f0;
+  --vtr-dim: #7d8ea4;
+  --vtr-faint: #4f6076;
+  --vtr-accent: #57d3e8;
+  --vtr-on-accent: #141b26;
+  --vtr-glow: color-mix(in srgb, var(--vtr-accent) 65%, transparent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 35%, transparent);
+}
+
+/* Accessibility: kill the glow (the HUD shape, chamfers and accent all stay). */
+.vtr[data-glow="off"] {
+  --vtr-glow: transparent;
+  --vtr-glow-soft: transparent;
+}
+

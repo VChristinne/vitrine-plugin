@@ -1,0 +1,229 @@
+/* Task board (renderTaskDashboard) + interactive task row (renderTaskRow). The
+   base .vtr-task/.vtr-task-add/.vtr-task-row/.vtr-task-t styles live in
+   objects.css; this module adds the status lanes, collapse, pills and chips. */
+
+/* Rows share one set of columns so the pills/chips line up down the list:
+   the body owns the tracks, each row re-uses them via subgrid. Columns:
+   checkbox | title | status | priority | schedule | deadline | context. */
+.vtr-objects .vtr-task-secbody { display: grid; grid-template-columns: auto 1fr repeat(5, auto); gap: 2px 11px; }
+.vtr-objects .vtr-task-cell { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+
+/* Status + priority pills — clickable, tinted by value. */
+.vtr-objects .vtr-task-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--vtr-dim);
+  background: color-mix(in srgb, var(--vtr-dim) 14%, transparent);
+}
+.vtr-objects .vtr-task-pill-i { display: inline-flex; }
+.vtr-objects .vtr-task-pill-i svg { width: 12px; height: 12px; }
+
+/* Status tints: In progress = accent, Done = muted, the rest neutral. */
+.vtr-objects .vtr-task-pill.is-in-progress { color: var(--vtr-accent); background: color-mix(in srgb, var(--vtr-accent) 16%, transparent); }
+.vtr-objects .vtr-task-pill.is-done { color: var(--vtr-faint); background: color-mix(in srgb, var(--vtr-faint) 16%, transparent); }
+
+/* Priority tints: High = red, Medium = amber, Low = accent, None = faint. */
+.vtr-objects .vtr-task-pill.is-high { color: #e06666; background: color-mix(in srgb, #e06666 18%, transparent); }
+.vtr-objects .vtr-task-pill.is-medium { color: #e0a866; background: color-mix(in srgb, #e0a866 18%, transparent); }
+.vtr-objects .vtr-task-pill.is-low { color: var(--vtr-accent); background: color-mix(in srgb, var(--vtr-accent) 14%, transparent); }
+.vtr-objects .vtr-task-pill.is-none { color: var(--vtr-faint); background: transparent; }
+
+/* Deadline / schedule / context chips. */
+.vtr-objects .vtr-task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--vtr-dim);
+}
+.vtr-objects .vtr-task-chip-i { display: inline-flex; }
+.vtr-objects .vtr-task-chip-i svg { width: 12px; height: 12px; }
+.vtr-objects .vtr-task-chip.is-context { cursor: pointer; color: var(--vtr-accent); }
+.vtr-objects .vtr-task-chip.is-more { padding: 1px 6px; border-radius: 20px; background: color-mix(in srgb, var(--vtr-accent) 13%, transparent); }
+.vtr-objects .vtr-task-chip.is-deadline.is-overdue { color: #e06666; font-weight: 600; }
+
+/* ---- Compact row: the object page's own listing (task-row.ts `page`). The
+   hub's Tasks list keeps the wide grid above; everything here is scoped to
+   .is-compact so the two can't drift into each other. ---- */
+.vtr-objects .vtr-objects-tasks .vtr-task-secbody { display: flex; flex-direction: column; gap: 0; }
+.vtr-objects .vtr-task-row.is-compact { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 5px; border-radius: 6px; }
+.vtr-objects .vtr-task-row.is-compact .vtr-task-check { width: 13px; height: 13px; margin: 0; }
+.vtr-objects .vtr-task-row.is-compact .vtr-task-t { min-width: 0; gap: 6px; font-size: 13px; }
+.vtr-objects .vtr-task-row.is-compact .vtr-task-tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects .vtr-task-tail {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-size: 11.5px;
+  color: var(--vtr-dim);
+}
+.vtr-objects .vtr-task-tail .vtr-task-chip { font-size: 11.5px; }
+.vtr-objects .vtr-task-tail .vtr-task-chip-i svg { width: 11px; height: 11px; }
+
+/* Status + priority as bare icons — clickable, tinted by value, labelled by
+   their tooltip. The word they used to carry is what made the row tall. */
+.vtr-objects .vtr-task-ico { display: inline-flex; cursor: pointer; color: var(--vtr-faint); }
+.vtr-objects .vtr-task-ico svg { width: 12px; height: 12px; }
+.vtr-objects .vtr-task-ico.is-in-progress { color: var(--vtr-accent); }
+.vtr-objects .vtr-task-ico.is-next-up { color: #e0a866; }
+.vtr-objects .vtr-task-ico.is-status.is-done { color: #4e9c7d; }
+.vtr-objects .vtr-task-ico.is-high { color: #e06666; }
+.vtr-objects .vtr-task-ico.is-medium { color: #e0a866; }
+.vtr-objects .vtr-task-ico.is-low { color: var(--vtr-accent); }
+.vtr-objects .vtr-task-ico.is-none { opacity: .35; }
+
+/* Schedule → deadline as one span. Same weight on both: the arrow tells them
+   apart when both exist, and a lone date leans on its tooltip. */
+.vtr-objects .vtr-task-when { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vtr-objects .vtr-task-when .is-sched { color: var(--vtr-faint); }
+.vtr-objects .vtr-task-when .is-due { color: var(--vtr-dim); }
+.vtr-objects .vtr-task-when .is-due.is-overdue { color: #e06666; }
+.vtr-objects .vtr-task-arw { color: var(--vtr-faint); opacity: .6; }
+
+/* Sidebar "+" quick-create on the Tasks nav row (objects.ts integration). Shown
+   on row hover, sitting where the count is. */
+.vtr-objects .vtr-objects-nav-add {
+  display: none;
+  align-items: center;
+  margin-left: auto;
+  cursor: pointer;
+  color: var(--vtr-dim);
+}
+.vtr-objects .vtr-objects-nav-add svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-objects-nav:hover .vtr-objects-nav-add { display: inline-flex; }
+
+/* Tasks section on an object page (object-page.ts integration). */
+.vtr-objects .vtr-objects-tasks { margin-top: 38px; border-top: 1px solid var(--vtr-line); padding-top: 16px; max-width: 640px; display: flex; flex-direction: column; gap: 0; }
+.vtr-objects .vtr-objects-tasks .vtr-task-add input { margin: 0; }
+
+/* Recurring glyph on a task row (task-row.ts). */
+.vtr-objects .vtr-task-recur { display: inline-flex; flex: none; color: var(--vtr-accent); }
+.vtr-objects .vtr-task-recur svg { width: 12px; height: 12px; }
+
+/* Recurrence editor on a task's object page (task-stats.ts). */
+.vtr-objects .vtr-recur { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.vtr-objects .vtr-recur-head { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--vtr-dim); }
+.vtr-objects .vtr-recur-head-i { display: inline-flex; color: var(--vtr-accent); }
+.vtr-objects .vtr-recur-head-i svg { width: 13px; height: 13px; }
+
+.vtr-objects .vtr-recur-enable {
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+  padding: 4px 10px; font-size: 12px; cursor: pointer;
+  color: var(--vtr-accent);
+  background: color-mix(in srgb, var(--vtr-accent) 12%, transparent);
+}
+.vtr-objects .vtr-recur-enable svg { width: 13px; height: 13px; }
+
+.vtr-objects .vtr-recur-body { display: flex; flex-direction: column; gap: 10px; }
+.vtr-objects .vtr-recur-modes { display: inline-flex; gap: 4px; }
+.vtr-objects .vtr-recur-mode {
+  padding: 3px 10px; font-size: 12px; cursor: pointer;
+  color: var(--vtr-dim);
+  background: color-mix(in srgb, var(--vtr-dim) 12%, transparent);
+}
+.vtr-objects .vtr-recur-mode.is-active { color: var(--vtr-accent); background: color-mix(in srgb, var(--vtr-accent) 16%, transparent); }
+
+.vtr-objects .vtr-recur-row { display: flex; align-items: center; gap: 8px; }
+.vtr-objects .vtr-recur-lbl { font-size: 12px; color: var(--vtr-dim); }
+.vtr-objects .vtr-recur-num { width: 54px; }
+.vtr-objects .vtr-recur-num, .vtr-objects .vtr-recur-unit, .vtr-objects .vtr-recur-until {
+  padding: 3px 6px; font-size: 12px;
+  color: var(--vtr-text); background: var(--vtr-panel);
+  border: 1px solid var(--vtr-line); border-radius: 4px;
+}
+
+.vtr-objects .vtr-recur-days { display: inline-flex; gap: 4px; }
+.vtr-objects .vtr-recur-day {
+  min-width: 34px; height: 24px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  color: var(--vtr-dim);
+  background: color-mix(in srgb, var(--vtr-dim) 12%, transparent);
+}
+.vtr-objects .vtr-recur-day.is-active { color: var(--vtr-on-accent); background: var(--vtr-accent); }
+
+.vtr-objects .vtr-recur-clear { display: inline-flex; margin-left: auto; cursor: pointer; color: var(--vtr-faint); }
+.vtr-objects .vtr-recur-clear:hover { color: #e06666; }
+.vtr-objects .vtr-recur-clear svg { width: 14px; height: 14px; }
+
+/* Hybrid quick-add composer at the top of the Tasks overview. */
+.vtr-objects-quickadd { margin: 14px 14px 4px; }
+.vtr-objects-qa-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  border-radius: 10px;
+  background: var(--vtr-panel);
+  border: 1px solid var(--vtr-line);
+  transition: border-color .12s;
+}
+.vtr-objects-qa-row:focus-within { border-color: color-mix(in srgb, var(--vtr-accent) 55%, var(--vtr-line)); }
+.vtr-objects-qa-i { display: inline-flex; color: var(--vtr-faint); flex: none; }
+.vtr-objects-qa-i svg { width: 16px; height: 16px; }
+.vtr-objects-qa-row:focus-within .vtr-objects-qa-i { color: var(--vtr-accent); }
+.vtr-objects-qa-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--vtr-text);
+  font-size: 14px;
+  font-family: var(--font-text);
+}
+.vtr-objects-qa-row input::placeholder { color: var(--vtr-faint); }
+.vtr-objects-qa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--vtr-line);
+  color: var(--vtr-dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+.vtr-objects-qa-btn svg { width: 13px; height: 13px; }
+.vtr-objects-qa-btn.is-on { background: color-mix(in srgb, var(--vtr-accent) 14%, var(--vtr-bg)); border-color: color-mix(in srgb, var(--vtr-accent) 40%, transparent); color: color-mix(in srgb, var(--vtr-accent) 82%, var(--vtr-text)); }
+
+/* Live preview of the parsed task. */
+.vtr-objects-qa-preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 4px 2px; }
+.vtr-objects-qa-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 6px; font-size: 12px; background: var(--vtr-panel); color: var(--vtr-dim); }
+.vtr-objects-qa-chip-i { display: inline-flex; }
+.vtr-objects-qa-chip-i svg { width: 12px; height: 12px; }
+.vtr-objects-qa-chip.is-title { background: transparent; color: var(--vtr-text); font-weight: 500; padding-left: 0; }
+.vtr-objects-qa-chip.is-recur { background: color-mix(in srgb, var(--vtr-accent) 13%, var(--vtr-bg)); color: color-mix(in srgb, var(--vtr-accent) 82%, var(--vtr-text)); }
+.vtr-objects-qa-chip.is-deadline { background: color-mix(in srgb, #c0392b 12%, var(--vtr-bg)); color: color-mix(in srgb, #c0392b 78%, var(--vtr-text)); }
+.vtr-objects-qa-chip.is-pri.is-high { background: color-mix(in srgb, #c0392b 12%, var(--vtr-bg)); color: color-mix(in srgb, #c0392b 78%, var(--vtr-text)); }
+
+/* Occurrence log — read-only list under a recurring task's properties. */
+.vtr-objects .vtr-occ { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-occ-h { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.vtr-objects .vtr-occ-k { color: var(--vtr-dim); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.vtr-objects .vtr-occ-c { color: var(--vtr-dim); font-size: 11px; padding: 1px 7px; border-radius: 20px; background: var(--vtr-panel); }
+.vtr-objects .vtr-occ-chev { display: inline-flex; margin-left: auto; color: var(--vtr-faint); }
+.vtr-objects .vtr-occ-chev svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-occ.is-collapsed .vtr-occ-chev { transform: rotate(-90deg); }
+.vtr-objects .vtr-occ.is-collapsed .vtr-occ-b { display: none; }
+.vtr-objects .vtr-occ-b { display: flex; flex-direction: column; margin-top: 4px; }
+.vtr-objects .vtr-occ-row { display: flex; align-items: center; gap: 7px; padding: 3px 0; font-size: 12.5px; color: var(--vtr-text); }
+.vtr-objects .vtr-occ-i { display: inline-flex; color: var(--vtr-dim); }
+.vtr-objects .vtr-occ-i svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-occ-row.is-completed .vtr-occ-i { color: #4e9c7d; }
+.vtr-objects .vtr-occ-row.is-excused .vtr-occ-i { color: var(--vtr-accent); }
+.vtr-objects .vtr-occ-p { margin-left: auto; color: var(--vtr-faint); font-size: 11.5px; }
+.vtr-objects .vtr-occ-more { padding: 3px 0; font-size: 12px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects .vtr-occ-more:hover { color: var(--vtr-text); }

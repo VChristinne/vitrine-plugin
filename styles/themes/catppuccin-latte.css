@@ -1,0 +1,17 @@
+
+/* Catppuccin Latte (light) com o mesmo relevo neumórfico das outras superfícies.
+   Só as cores de superfície e texto; o accent continua sendo o do Obsidian e o
+   tratamento raised/pressed vive em themes/base.css (data-vtr-neu). */
+
+:is(.vtr-objects, .vtr-modal)[data-vtr-surface="latte"] {
+  --vtr-bg: #eff1f5;      /* base */
+  --vtr-canvas: #eff1f5;
+  --vtr-rail: #e6e9ef;    /* mantle */
+  --vtr-panel: #dce0e8;   /* crust — precisa contrastar com bg e rail no hover */
+  --vtr-line: #ccd0da;    /* surface0 */
+  --vtr-text: #4c4f69;    /* text */
+  --vtr-dim: #6c6f85;     /* subtext0 */
+  --vtr-faint: #9ca0b0;   /* overlay0 */
+  --vtr-neu-lo: #ccd0da;
+  --vtr-neu-hi: #ffffff;
+}

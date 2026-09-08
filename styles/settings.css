@@ -1,0 +1,86 @@
+/* Settings tab bar — a horizontal row of section buttons; the active one is
+   lit with the accent. Mirrors the library modal's left-nav in spirit. */
+/* Horizontal category tabs above the active category's panel. */
+.vtr-settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 8px;
+}
+
+.vtr-settings-tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: calc(13px * var(--vtr-fs, 1));
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.vtr-settings-tab:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.vtr-settings-tab.is-active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-weight: 500;
+}
+
+/* Secondary sub-section nav under the category tabs. */
+.vtr-settings-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -6px 0 16px;
+}
+.vtr-settings-subtab {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: calc(12.5px * var(--vtr-fs, 1));
+  cursor: pointer;
+  box-shadow: none;
+}
+.vtr-settings-subtab:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+.vtr-settings-subtab.is-active {
+  color: var(--text-accent);
+  box-shadow: inset 0 0 0 1px var(--interactive-accent);
+}
+
+/* A heading stripped of its label (sub-tab names it) but kept for its control. */
+.vtr-settings .vtr-heading-bare {
+  justify-content: flex-end;
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Drag-to-reorder rows: six-dot grip (as in Browse) + drag states. */
+.vtr-grip {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  color: var(--text-faint);
+  cursor: grab;
+}
+.vtr-grip svg {
+  width: 16px;
+  height: 16px;
+}
+.setting-item.is-dragging {
+  opacity: 0.5;
+}
+.setting-item.is-drop {
+  box-shadow: inset 0 2px 0 var(--interactive-accent);
+}
+

@@ -1,0 +1,119 @@
+/* ── Query filter popover ────────────────────────────────────────────
+   Queries are edited inline (Capacities-style): the Filter tool button opens
+   this popover with AND'd condition rows. Reuses .vtr-objects-pop chrome from
+   objects.css; only the condition-row layout lives here. */
+.vtr-query-pop {
+  width: 340px;
+}
+.vtr-query-pop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+.vtr-query-pop-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.vtr-query-pill {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  background: var(--vtr-bg);
+  border: 1px solid var(--vtr-line);
+  border-radius: 7px;
+  color: var(--vtr-text);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.vtr-query-pill:hover {
+  border-color: color-mix(in srgb, var(--vtr-accent) 45%, var(--vtr-line));
+}
+.vtr-query-pill > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vtr-query-pill-c {
+  display: inline-flex;
+  flex: none;
+  color: var(--vtr-faint);
+}
+.vtr-query-pill-c svg {
+  width: 13px;
+  height: 13px;
+}
+.vtr-query-pop-val {
+  flex: 1;
+  min-width: 0;
+  background: var(--vtr-bg);
+  border: 1px solid var(--vtr-line);
+  border-radius: 7px;
+  color: var(--vtr-text);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  outline: none;
+}
+.vtr-query-pop-val:focus {
+  border-color: color-mix(in srgb, var(--vtr-accent) 55%, var(--vtr-line));
+}
+.vtr-query-pop-del {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--vtr-dim);
+  cursor: pointer;
+}
+.vtr-query-pop-del:hover {
+  background: var(--vtr-line);
+  color: var(--vtr-text);
+}
+.vtr-query-pop-del svg {
+  width: 14px;
+  height: 14px;
+}
+.vtr-query-pop-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--vtr-accent);
+  cursor: pointer;
+  padding: 3px 2px;
+}
+.vtr-query-pop-add svg {
+  width: 13px;
+  height: 13px;
+}
+.vtr-query-pop-limit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vtr-line);
+  font-size: 12.5px;
+  color: var(--vtr-dim);
+}
+.vtr-query-pop-limit .vtr-query-pop-val {
+  flex: none;
+  width: 72px;
+}
+.vtr-query-pop-n {
+  flex: none;
+  width: 14px;
+  font-size: 11.5px;
+  color: var(--vtr-faint);
+  font-variant-numeric: tabular-nums;
+}

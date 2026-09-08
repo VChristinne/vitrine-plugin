@@ -1,0 +1,15 @@
+/* Tokyo Night (dark) with the neumorphic relief and its own blue accent. Palette
+   only; the raised/pressed treatment lives in themes/base.css (data-vtr-neu). */
+
+:is(.vtr-objects, .vtr-modal)[data-vtr-surface="tokyo"] {
+  --vtr-bg: #24283b;
+  --vtr-canvas: #24283b;
+  --vtr-panel: #2a2f45;
+  --vtr-line: #1c1e2b;
+  --vtr-text: #c0caf5;
+  --vtr-dim: #565f89;
+  --vtr-faint: #414868;
+  --vtr-neu-lo: #191b28;
+  --vtr-neu-hi: #2e3350;
+  --vtr-accent: #7aa2f7;
+}

@@ -1,0 +1,41 @@
+/* Shared neumorphic treatment for any surface flagged data-vtr-neu (neumorphism,
+   tokyo-night). Raised cards/panels drop their border and lift with a dual shadow;
+   inputs and active tabs sink in. The Objects hub already uses soft corners, so
+   there's no hairline-identity conflict here. Palettes live per-theme alongside. */
+
+.vtr-objects[data-vtr-neu] :is(
+    .vtr-objects-card,
+    .vtr-objects-tcard,
+    .vtr-objects-collcard,
+    .vtr-objects-linkcard,
+    .vtr-objects-linkembed,
+    .vtr-objects-props,
+    .vtr-objects-pavatar,
+    .vtr-objects-pcover-side
+  ) {
+  background: var(--vtr-bg);
+  border: none;
+  box-shadow: 5px 5px 12px var(--vtr-neu-lo), -5px -5px 12px var(--vtr-neu-hi);
+}
+.vtr-objects[data-vtr-neu] .vtr-objects-card:hover {
+  box-shadow: 7px 7px 16px var(--vtr-neu-lo), -7px -7px 16px var(--vtr-neu-hi);
+}
+
+/* Inputs and pressed controls sink into the surface. */
+.vtr-objects[data-vtr-neu] :is(.vtr-objects-finput, .vtr-objects-select, .vtr-objects-filter input) {
+  background: var(--vtr-bg);
+  border: none;
+  box-shadow: inset 2px 2px 5px var(--vtr-neu-lo), inset -2px -2px 5px var(--vtr-neu-hi);
+}
+.vtr-objects[data-vtr-neu] :is(.vtr-objects-tab.is-active, .vtr-objects-tab.is-on, .vtr-objects-nav.is-on) {
+  background: var(--vtr-bg);
+  box-shadow: inset 2px 2px 5px var(--vtr-neu-lo), inset -2px -2px 5px var(--vtr-neu-hi);
+}
+
+/* The main content panel is raised off the surface — a top margin gives the top
+   edge room to lift (otherwise it's flush under the top bar and the shadow hides). */
+.vtr-objects[data-vtr-neu] .vtr-objects-main {
+  border: none;
+  margin-top: 12px;
+  box-shadow: 5px 5px 12px var(--vtr-neu-lo), -5px -5px 12px var(--vtr-neu-hi);
+}

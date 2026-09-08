@@ -1,0 +1,250 @@
+/* ── Steam achievements ─────────────────────────────────────────── */
+/* Slate progress bar for the game page and the panel summary. */
+.vtr .vtr-progress {
+  background: var(--vtr-panel);
+  margin-top: 8px;
+}
+
+.vtr .vtr-progress-bar {
+  background: var(--vtr-accent);
+  box-shadow: 0 0 8px var(--vtr-glow);
+}
+
+.vtr-ach-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.vtr-ach-pct {
+  font-size: calc(40px * var(--vtr-fs, 1));
+  color: var(--vtr-accent);
+  line-height: 1;
+}
+
+.vtr-ach-pct[data-done="true"] {
+  color: #e8c45a;
+}
+
+.vtr-ach-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.vtr-ach-count {
+  color: var(--vtr-dim);
+}
+
+.vtr-ach-tags {
+  margin: -6px 0 18px;
+}
+
+.vtr-ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.vtr-ach-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vtr-panel);
+  border: 1px solid var(--vtr-accent);
+  box-shadow: 0 0 8px -1px var(--vtr-glow);
+  color: var(--vtr-accent);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.vtr-ach-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* PSN trophy tiers: tint the unlocked cell's frame by grade. */
+.vtr-ach-cell[data-tier="bronze"] { border-color: #cd7f32; box-shadow: 0 0 8px -1px #cd7f3288; color: #cd7f32; }
+.vtr-ach-cell[data-tier="silver"] { border-color: #c7ccd1; box-shadow: 0 0 8px -1px #c7ccd188; color: #c7ccd1; }
+.vtr-ach-cell[data-tier="gold"] { border-color: #e6b93b; box-shadow: 0 0 8px -1px #e6b93b88; color: #e6b93b; }
+.vtr-ach-cell[data-tier="platinum"] { border-color: #8fd3ea; box-shadow: 0 0 10px -1px #8fd3ea; color: #8fd3ea; }
+/* Locked cells stay dimmed regardless of tier (the is-locked rule wins). */
+
+/* Tier badge in the recent-unlocks list, and the row icon's colour. */
+.vtr-ach-tier {
+  text-transform: capitalize;
+  font-size: calc(11px * var(--vtr-fs, 1));
+}
+.vtr-ach-tier[data-tier="bronze"], .vtr-ach-row-icon[data-tier="bronze"] { color: #cd7f32; }
+.vtr-ach-tier[data-tier="silver"], .vtr-ach-row-icon[data-tier="silver"] { color: #c7ccd1; }
+.vtr-ach-tier[data-tier="gold"], .vtr-ach-row-icon[data-tier="gold"] { color: #e6b93b; }
+.vtr-ach-tier[data-tier="platinum"], .vtr-ach-row-icon[data-tier="platinum"] { color: #8fd3ea; }
+
+/* The unlock-date modal's input. */
+.vtr-date-input {
+  font-size: calc(14px * var(--vtr-fs, 1));
+  padding: 6px 8px;
+  margin-bottom: 14px;
+}
+
+.vtr-ach-cell.is-locked {
+  border-color: var(--vtr-line);
+  box-shadow: none;
+  color: var(--vtr-faint);
+  filter: saturate(0);
+  opacity: 0.55;
+}
+
+.vtr-ach-label {
+  color: var(--vtr-dim);
+  font-size: calc(11px * var(--vtr-fs, 1));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.vtr-ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 18px;
+}
+
+.vtr-ach-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  background: var(--vtr-panel);
+  border-left: 2px solid var(--vtr-accent);
+}
+
+.vtr-ach-row-icon {
+  display: flex;
+  color: var(--vtr-accent);
+}
+
+.vtr-ach-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.vtr-ach-row-name {
+  color: var(--vtr-text);
+}
+
+.vtr-ach-row-desc {
+  color: var(--vtr-dim);
+  font-size: calc(11px * var(--vtr-fs, 1));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtr-ach-row-side {
+  text-align: right;
+}
+
+.vtr-ach-rarity {
+  color: var(--vtr-dim);
+  font-size: calc(12px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-rarity.is-rare {
+  color: var(--vtr-accent);
+}
+
+.vtr-ach-rarity-pct {
+  color: var(--vtr-faint);
+  font-size: calc(11px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-row-when {
+  color: var(--vtr-faint);
+  font-size: calc(11px * var(--vtr-fs, 1));
+  width: 84px;
+  text-align: right;
+}
+
+.vtr-ach-synced {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vtr-faint);
+  font-size: calc(11px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-synced .svg-icon {
+  width: 13px;
+  height: 13px;
+}
+.vtr-ach-resync {
+  display: inline-flex;
+  cursor: pointer;
+}
+.vtr-ach-resync:hover {
+  color: var(--vtr-accent);
+}
+
+/* Panel summary: the compact block above "Open note". */
+.vtr-ach-summary {
+  border-top: 1px solid var(--vtr-line);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.vtr-ach-summary-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.vtr-ach-summary-pct {
+  color: var(--vtr-accent);
+  font-size: calc(18px * var(--vtr-fs, 1));
+  text-shadow: 0 0 8px var(--vtr-glow);
+}
+
+.vtr-ach-summary-count {
+  color: var(--vtr-dim);
+  font-size: calc(12px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-summary-none {
+  color: var(--vtr-faint);
+  font-size: calc(12px * var(--vtr-fs, 1));
+}
+
+
+/* ── Empty state (achievements panel, before the first sync) ─────── */
+.vtr-empty-state {
+  color: var(--vtr-dim);
+  padding: 40px 8px;
+  max-width: 42ch;
+}
+.vtr-empty-icon {
+  color: var(--vtr-faint);
+  margin-bottom: 10px;
+}
+.vtr-empty-icon .svg-icon {
+  width: 24px;
+  height: 24px;
+}
+.vtr-empty-title {
+  color: var(--vtr-text);
+  font-size: calc(14px * var(--vtr-fs, 1));
+  margin-bottom: 4px;
+}
+.vtr-button {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 14px;
+  border: 1px solid var(--vtr-accent);
+  border-radius: 8px;
+  color: var(--vtr-accent);
+  text-align: center;
+  cursor: pointer;
+}

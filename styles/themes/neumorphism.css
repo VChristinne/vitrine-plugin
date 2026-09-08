@@ -1,0 +1,26 @@
+/* Neumorphism — auto light/dark, following the Obsidian theme. Palette only; the
+   raised/pressed treatment lives in themes/base.css (keyed on data-vtr-neu). */
+
+:is(.vtr-objects, .vtr-modal)[data-vtr-surface="neu"] {
+  --vtr-bg: #f1f3f7;
+  --vtr-canvas: #f1f3f7;
+  --vtr-panel: #e8ebf1;
+  --vtr-line: #e0e3e9;
+  --vtr-text: #3a3e47;
+  --vtr-dim: #8a8f9a;
+  --vtr-faint: #b0b4bd;
+  --vtr-neu-lo: #d3d7df;
+  --vtr-neu-hi: #ffffff;
+}
+
+body.theme-dark :is(.vtr-objects, .vtr-modal)[data-vtr-surface="neu"] {
+  --vtr-bg: #2b2e36;
+  --vtr-canvas: #2b2e36;
+  --vtr-panel: #313640;
+  --vtr-line: #22252c;
+  --vtr-text: #dce0e6;
+  --vtr-dim: #8b909b;
+  --vtr-faint: #5a606b;
+  --vtr-neu-lo: #1f2128;
+  --vtr-neu-hi: #363a44;
+}

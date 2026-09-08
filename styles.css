@@ -1,0 +1,2294 @@
+/* Vitrine — every visual decision lives here. No element.style in TypeScript. */
+
+/* No title bar on the plugin views: the tab already names them. */
+.workspace-leaf-content[data-type^="vitrine-"] .view-header {
+  display: none;
+}
+
+/* Optional: drop the tab bar of the group showing a Vitrine view. */
+body.vtr-hide-tabs
+  .workspace-tabs:has(
+    > .workspace-tab-container
+      > .workspace-leaf.mod-active
+      > .workspace-leaf-content[data-type^="vitrine-"]
+  )
+  > .workspace-tab-header-container {
+  display: none;
+}
+
+/* Silence Obsidian's body-level file-name tooltip while a Vitrine view is in front,
+   except over the collapsed hub sidebar — there the icons need their name. The
+   tooltip is a single body-level node with no trigger info, so we gate on whether
+   the collapsed sidebar is the thing being hovered. Tooltips we set on purpose are
+   tagged `.vtr-tip` (setTooltip's `classes`) so they survive this. */
+body.vtr-active:not(:has(.vtr-nav.is-collapsed:hover)) .tooltip:not(.vtr-tip) {
+  display: none !important;
+}
+
+/* ── HUD tab bar skins ─────────────────────────────────────────────────────
+   Restyle Obsidian's tab bar for the group showing a Vitrine view, scoped by the
+   same :has() the hide rule uses. Colours derive from the user's palette + accent
+   (syncTabBar mirrors them onto <body>), so custom accents and light/dark work.
+   Obsidian's own curve/radius/outline are zeroed through its --tab-* vars so the
+   shapes below land cleanly, and accent marks use box-shadow rather than ::before
+   (which Obsidian uses for the tab curve). The × position is the user's snippet. */
+
+/* palette → tab tokens (slate default; light on a light theme unless forced slate) */
+body[class*="vtr-tabs-"] {
+  --vt-bar: #141b26; --vt-tab: #1d2836; --vt-line: #2a3547;
+  --vt-text: #dbe4f0; --vt-dim: #7d8ea4;
+  --vt-accent: var(--interactive-accent); --vt-on: var(--text-on-accent);
+  --vt-glow: color-mix(in srgb, var(--vt-accent) 35%, transparent);
+}
+body.theme-light[class*="vtr-tabs-"]:not([data-vtr-palette="slate"]),
+body[class*="vtr-tabs-"][data-vtr-palette="light"] {
+  --vt-bar: #e2e7ee; --vt-tab: #d9e0e9; --vt-line: #c7d0dc;
+  --vt-text: #1e2833; --vt-dim: #5d6b7d;
+}
+body[class*="vtr-tabs-"][data-vtr-palette="slate"] {
+  --vt-bar: #141b26; --vt-tab: #1d2836; --vt-line: #2a3547;
+  --vt-text: #dbe4f0; --vt-dim: #7d8ea4;
+}
+/* shared base: neutralise Obsidian's tab shape, set the bar + text colours. */
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  > .workspace-tab-header-container {
+  --tab-curve: 0;
+  --tab-radius: 0;
+  --tab-radius-active: 0;
+  --tab-outline-width: 0px;
+  --tab-divider-color: transparent;
+  --tab-background-active: transparent;
+}
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-dim);
+}
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-text);
+}
+
+/* chamfer — each tab a chamfered chip; active fills accent */
+body.vtr-tabs-chamfer
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header {
+  background: var(--vt-tab);
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  margin: 4px 3px;
+}
+body.vtr-tabs-chamfer
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background: var(--vt-accent);
+}
+body.vtr-tabs-chamfer
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-on);
+}
+
+/* underline — flat tabs, accent underline on active (box-shadow, not a border) */
+body.vtr-tabs-underline
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  box-shadow: inset 0 -2px 0 var(--vt-accent);
+}
+body.vtr-tabs-underline
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-accent);
+}
+
+/* bracket — accent corner brackets frame the active tab */
+body.vtr-tabs-bracket
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background-image:
+    linear-gradient(var(--vt-accent), var(--vt-accent)) left top / 11px 2px no-repeat,
+    linear-gradient(var(--vt-accent), var(--vt-accent)) left top / 2px 11px no-repeat,
+    linear-gradient(var(--vt-accent), var(--vt-accent)) right bottom / 11px 2px no-repeat,
+    linear-gradient(var(--vt-accent), var(--vt-accent)) right bottom / 2px 11px no-repeat;
+}
+
+/* rail — tabs joined in one strip, dividers between, active fills accent */
+body.vtr-tabs-rail
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header + .workspace-tab-header {
+  border-left: 1px solid var(--vt-line);
+}
+body.vtr-tabs-rail
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background: var(--vt-accent);
+}
+body.vtr-tabs-rail
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active :is(.workspace-tab-header-inner-title, .workspace-tab-header-inner-icon) {
+  color: var(--vt-on);
+}
+
+/* notch — folder-tab shape; active lifts with an accent top edge */
+body.vtr-tabs-notch
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header {
+  background: var(--vt-tab);
+  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 100%, 0 100%);
+  margin: 4px 1px 0;
+}
+body.vtr-tabs-notch
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  background: var(--vt-bar);
+  box-shadow: inset 0 2px 0 var(--vt-accent);
+}
+
+/* Drop Obsidian's tab-bar action buttons (new tab, tab-list dropdown) on a styled
+   Vitrine bar — they clutter the HUD and offset the centred layout. */
+body[class*="vtr-tabs-"]
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  :is(.workspace-tab-header-new-tab, .workspace-tab-header-tab-list) {
+  display: none;
+}
+/* And the sidebar expand/collapse toggles in the title bar (the "expand" icons).
+   Sidebars can still be toggled by hotkey/command. */
+body[class*="vtr-tabs-"] .sidebar-toggle-button {
+  display: none;
+}
+
+/* centered layout — tabs float as a centred group and grow outward, Safari-compact
+   style. The strip fills the bar only so the group can centre in it; the tabs keep a
+   compact width, gain breathing room (floating), and centre their label. */
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-container-inner {
+  flex-grow: 1;
+  justify-content: center;
+}
+/* Obsidian's spacer normally eats the leftover width, pinning tabs left — stop it. */
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-spacer {
+  flex-grow: 0;
+}
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header {
+  min-width: 190px;
+  max-width: 300px;
+}
+/* Inner spans the pill so the title fills and centres; icon/close pin to the ends. */
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-inner {
+  width: 100%;
+}
+body.vtr-tabslay-center
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header-inner-title {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* tick — thin tabs; active carries an accent tick flush to a border. Side is a
+   setting (default right, since the close × usually lives on the left). */
+body.vtr-tabs-tick
+  .workspace-tabs:has(> .workspace-tab-container > .workspace-leaf.mod-active > .workspace-leaf-content[data-type^="vitrine-"])
+  .workspace-tab-header.is-active {
+  color: var(--vt-text);
+}
+
+/* With the tab bar hidden the view rises to the window top. On a macOS frameless
+   window — but NOT fullscreen, where there are no controls — the traffic lights
+   sit there. Obsidian zeroes --titlebar-height once the tab bar (its usual drag
+   handle) is gone, so this reserves a fixed strip; tune 40px if it feels tight. */
+body.vtr-hide-tabs.mod-macos:is(.is-frameless, .is-hidden-frameless):not(.is-fullscreen)
+  .workspace-leaf-content[data-type^="vitrine-"] .view-content {
+  position: relative;
+}
+
+/* Pad the columns (rail, sidebar, main), not the outer view, so each keeps its
+   own background to the top while its content drops clear of the controls. */
+body.vtr-hide-tabs.mod-macos:is(.is-frameless, .is-hidden-frameless):not(.is-fullscreen)
+  .workspace-leaf-content[data-type^="vitrine-"] .view-content > * {
+  padding-top: 40px;
+}
+
+/* That reserved strip becomes a real titlebar: -webkit-app-region: drag is the
+   native mechanism Obsidian's own titlebar uses, so the window drags from here
+   again. The strip is empty (content sits below it), so nothing is caught. */
+body.vtr-hide-tabs.mod-macos:is(.is-frameless, .is-hidden-frameless):not(.is-fullscreen)
+  .workspace-leaf-content[data-type^="vitrine-"] .view-content::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 40px;
+  -webkit-app-region: drag;
+  z-index: 10;
+}
+
+/* Themes may paint .view-content over us; the background belongs to the plugin.
+   Prefix selector so every vitrine view (reminders, game, …) is covered. */
+.workspace-leaf-content[data-type^="vitrine-"] .view-content {
+  background-color: var(--vtr-bg);
+  padding: 0;
+}
+
+.vtr {
+  --vtr-bg: #19212e;
+  --vtr-rail: #141b26;
+  --vtr-panel: #1d2836;
+  --vtr-line: #2a3547;
+  --vtr-text: #dbe4f0;
+  --vtr-dim: #7d8ea4;
+  --vtr-faint: #4f6076;
+  --vtr-accent: var(--interactive-accent);
+  --vtr-on-accent: var(--text-on-accent);
+  --vtr-cut: 14px;
+  /* Neon: the accent with alpha, used for text, border and clip-path glow. */
+  --vtr-glow: color-mix(in srgb, var(--vtr-accent) 65%, transparent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 35%, transparent);
+
+  display: flex;
+  height: 100%;
+  background: var(--vtr-bg);
+  color: var(--vtr-text);
+  font-family: var(--font-interface);
+  font-size: calc(13px * var(--vtr-fs, 1));
+  padding: 0;
+  overflow: hidden;
+}
+
+.theme-light .vtr,
+.vtr[data-palette="light"] {
+  --vtr-bg: #eef1f5;
+  --vtr-rail: #e2e7ee;
+  --vtr-panel: #d9e0e9;
+  --vtr-line: #c7d0dc;
+  --vtr-text: #1e2833;
+  --vtr-dim: #5d6b7d;
+  --vtr-faint: #8b98a8;
+  --vtr-accent: #0f7f96;
+  --vtr-on-accent: #ffffff;
+  /* On a light background the glow has to stay subtle or it smears. */
+  --vtr-glow: color-mix(in srgb, var(--vtr-accent) 40%, transparent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 18%, transparent);
+}
+
+/* "Always slate" wins over a light theme. */
+.vtr[data-palette="slate"] {
+  --vtr-bg: #19212e;
+  --vtr-rail: #141b26;
+  --vtr-panel: #1d2836;
+  --vtr-line: #2a3547;
+  --vtr-text: #dbe4f0;
+  --vtr-dim: #7d8ea4;
+  --vtr-faint: #4f6076;
+  --vtr-accent: #57d3e8;
+  --vtr-on-accent: #141b26;
+  --vtr-glow: color-mix(in srgb, var(--vtr-accent) 65%, transparent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 35%, transparent);
+}
+
+/* Accessibility: kill the glow (the HUD shape, chamfers and accent all stay). */
+.vtr[data-glow="off"] {
+  --vtr-glow: transparent;
+  --vtr-glow-soft: transparent;
+}
+
+/* ── Modal shell ─────────────────────────────────────────────────────────
+   Modals mount outside the hub, so the --vtr-* tokens don't reach them: they
+   carry the same `data-vtr-surface` the hub does (applyModalTheme) and derive
+   the palette here. Default = Obsidian's own colours; the neu/tokyo palettes
+   come from themes/*.css, whose selectors also match `.vtr-modal`. */
+.vtr-modal {
+  --vtr-bg: var(--background-primary);
+  --vtr-panel: var(--background-secondary);
+  --vtr-line: var(--background-modifier-border);
+  --vtr-text: var(--text-normal);
+  --vtr-dim: var(--text-muted);
+  --vtr-faint: var(--text-faint);
+  --vtr-accent: var(--interactive-accent);
+  --vtr-on-accent: var(--text-on-accent);
+  --vtr-glow-soft: color-mix(in srgb, var(--vtr-accent) 22%, transparent);
+
+  background: var(--vtr-bg);
+  color: var(--vtr-text);
+  border: 1px solid var(--vtr-line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 24px 64px -24px rgba(15, 25, 40, 0.45);
+  font-family: var(--font-interface);
+}
+
+.vtr-modal .modal-content {
+  margin: 0;
+  padding: 0;
+}
+
+.vtr-modal .modal-close-button {
+  top: 12px;
+  right: 14px;
+  color: var(--vtr-faint);
+}
+.vtr-modal .modal-close-button:hover {
+  color: var(--vtr-text);
+}
+
+/* Header: the object's own title, sentence case — no HUD caps. */
+.vtr-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.vtr-modal-head-title {
+  font-size: calc(17px * var(--vtr-fs, 1));
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--vtr-text);
+}
+
+/* Fields in two columns to keep the modal short; wide ones span both. */
+.vtr-modal-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+.vtr-modal-field {
+  min-width: 0;
+}
+.vtr-modal-field.is-wide {
+  grid-column: 1 / -1;
+}
+.vtr-modal-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: calc(12.5px * var(--vtr-fs, 1));
+  font-weight: 500;
+  color: var(--vtr-dim);
+}
+/* Marks a value the modal pre-filled (status → draft, dates → today). */
+.vtr-modal-auto {
+  margin-left: 7px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: calc(10.5px * var(--vtr-fs, 1));
+  font-weight: 500;
+  color: var(--vtr-accent);
+  background: color-mix(in srgb, var(--vtr-accent) 14%, transparent);
+}
+
+.vtr-modal-input {
+  border: 1px solid var(--vtr-line);
+  border-radius: 9px;
+  background: var(--vtr-bg);
+}
+.vtr-modal-input:focus-within {
+  border-color: var(--vtr-accent);
+  box-shadow: 0 0 0 3px var(--vtr-glow-soft);
+}
+.vtr-modal-input-el {
+  width: 100%;
+  height: auto !important;
+  padding: 9px 12px !important;
+  color: var(--vtr-text) !important;
+  font-family: inherit !important;
+  font-size: calc(14px * var(--vtr-fs, 1)) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.vtr-modal-input-el::placeholder {
+  color: var(--vtr-faint);
+}
+.vtr-modal-input-el:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Footer: ghost cancel + accent primary, right-aligned. */
+.vtr-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+.vtr-modal-btn {
+  cursor: pointer;
+  padding: 8px 16px;
+  border: 1px solid var(--vtr-line);
+  border-radius: 9px;
+  font-size: calc(13px * var(--vtr-fs, 1));
+  font-weight: 600;
+  color: var(--vtr-dim);
+}
+.vtr-modal-btn:hover {
+  border-color: var(--vtr-accent);
+  color: var(--vtr-accent);
+}
+.vtr-modal-btn.is-primary {
+  background: var(--vtr-accent);
+  border-color: var(--vtr-accent);
+  color: var(--vtr-on-accent);
+}
+.vtr-modal-btn.is-primary:hover {
+  color: var(--vtr-on-accent);
+  filter: brightness(1.06);
+}
+
+/* Plain-Setting modals (Steam sync, unlock date) — Obsidian's own controls. */
+.vtr-modal-title {
+  margin: 0 0 8px;
+}
+.vtr-modal-note {
+  color: var(--text-muted);
+  font-size: calc(12px * var(--vtr-fs, 1));
+  margin: 0 0 12px;
+}
+
+/* Achievement progress bar (object page). */
+.vtr-progress {
+  height: 6px;
+  background: var(--background-modifier-border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.vtr-progress-bar {
+  height: 100%;
+  width: 0;
+  background: var(--interactive-accent);
+  transition: width 0.15s ease;
+}
+
+/* Command palette (Capacities-style) — SuggestModal, centred by Obsidian. */
+.vtr-palette .prompt-input { font-size: 15px; }
+.vtr-palette .vtr-palette-row { display: flex; align-items: center; gap: 12px; }
+.vtr-palette .vtr-palette-ico { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; flex: none; color: var(--hue, var(--text-muted)); background: color-mix(in srgb, var(--hue, var(--text-muted)) 14%, transparent); }
+.vtr-palette .vtr-palette-ico svg { width: 16px; height: 16px; }
+.vtr-palette .vtr-palette-name { flex: 1; font-size: 14px; color: var(--text-normal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vtr-palette .vtr-palette-pill { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 3px 9px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: var(--hue, var(--text-muted)); background: color-mix(in srgb, var(--hue, var(--text-muted)) 12%, transparent); }
+.vtr-palette .vtr-palette-pill svg { width: 13px; height: 13px; }
+/* ── Steam achievements ─────────────────────────────────────────── */
+/* Slate progress bar for the game page and the panel summary. */
+.vtr .vtr-progress {
+  background: var(--vtr-panel);
+  margin-top: 8px;
+}
+
+.vtr .vtr-progress-bar {
+  background: var(--vtr-accent);
+  box-shadow: 0 0 8px var(--vtr-glow);
+}
+
+.vtr-ach-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.vtr-ach-pct {
+  font-size: calc(40px * var(--vtr-fs, 1));
+  color: var(--vtr-accent);
+  line-height: 1;
+}
+
+.vtr-ach-pct[data-done="true"] {
+  color: #e8c45a;
+}
+
+.vtr-ach-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.vtr-ach-count {
+  color: var(--vtr-dim);
+}
+
+.vtr-ach-tags {
+  margin: -6px 0 18px;
+}
+
+.vtr-ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.vtr-ach-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vtr-panel);
+  border: 1px solid var(--vtr-accent);
+  box-shadow: 0 0 8px -1px var(--vtr-glow);
+  color: var(--vtr-accent);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.vtr-ach-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* PSN trophy tiers: tint the unlocked cell's frame by grade. */
+.vtr-ach-cell[data-tier="bronze"] { border-color: #cd7f32; box-shadow: 0 0 8px -1px #cd7f3288; color: #cd7f32; }
+.vtr-ach-cell[data-tier="silver"] { border-color: #c7ccd1; box-shadow: 0 0 8px -1px #c7ccd188; color: #c7ccd1; }
+.vtr-ach-cell[data-tier="gold"] { border-color: #e6b93b; box-shadow: 0 0 8px -1px #e6b93b88; color: #e6b93b; }
+.vtr-ach-cell[data-tier="platinum"] { border-color: #8fd3ea; box-shadow: 0 0 10px -1px #8fd3ea; color: #8fd3ea; }
+/* Locked cells stay dimmed regardless of tier (the is-locked rule wins). */
+
+/* Tier badge in the recent-unlocks list, and the row icon's colour. */
+.vtr-ach-tier {
+  text-transform: capitalize;
+  font-size: calc(11px * var(--vtr-fs, 1));
+}
+.vtr-ach-tier[data-tier="bronze"], .vtr-ach-row-icon[data-tier="bronze"] { color: #cd7f32; }
+.vtr-ach-tier[data-tier="silver"], .vtr-ach-row-icon[data-tier="silver"] { color: #c7ccd1; }
+.vtr-ach-tier[data-tier="gold"], .vtr-ach-row-icon[data-tier="gold"] { color: #e6b93b; }
+.vtr-ach-tier[data-tier="platinum"], .vtr-ach-row-icon[data-tier="platinum"] { color: #8fd3ea; }
+
+/* The unlock-date modal's input. */
+.vtr-date-input {
+  font-size: calc(14px * var(--vtr-fs, 1));
+  padding: 6px 8px;
+  margin-bottom: 14px;
+}
+
+.vtr-ach-cell.is-locked {
+  border-color: var(--vtr-line);
+  box-shadow: none;
+  color: var(--vtr-faint);
+  filter: saturate(0);
+  opacity: 0.55;
+}
+
+.vtr-ach-label {
+  color: var(--vtr-dim);
+  font-size: calc(11px * var(--vtr-fs, 1));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.vtr-ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 18px;
+}
+
+.vtr-ach-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  background: var(--vtr-panel);
+  border-left: 2px solid var(--vtr-accent);
+}
+
+.vtr-ach-row-icon {
+  display: flex;
+  color: var(--vtr-accent);
+}
+
+.vtr-ach-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.vtr-ach-row-name {
+  color: var(--vtr-text);
+}
+
+.vtr-ach-row-desc {
+  color: var(--vtr-dim);
+  font-size: calc(11px * var(--vtr-fs, 1));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtr-ach-row-side {
+  text-align: right;
+}
+
+.vtr-ach-rarity {
+  color: var(--vtr-dim);
+  font-size: calc(12px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-rarity.is-rare {
+  color: var(--vtr-accent);
+}
+
+.vtr-ach-rarity-pct {
+  color: var(--vtr-faint);
+  font-size: calc(11px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-row-when {
+  color: var(--vtr-faint);
+  font-size: calc(11px * var(--vtr-fs, 1));
+  width: 84px;
+  text-align: right;
+}
+
+.vtr-ach-synced {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vtr-faint);
+  font-size: calc(11px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-synced .svg-icon {
+  width: 13px;
+  height: 13px;
+}
+.vtr-ach-resync {
+  display: inline-flex;
+  cursor: pointer;
+}
+.vtr-ach-resync:hover {
+  color: var(--vtr-accent);
+}
+
+/* Panel summary: the compact block above "Open note". */
+.vtr-ach-summary {
+  border-top: 1px solid var(--vtr-line);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.vtr-ach-summary-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.vtr-ach-summary-pct {
+  color: var(--vtr-accent);
+  font-size: calc(18px * var(--vtr-fs, 1));
+  text-shadow: 0 0 8px var(--vtr-glow);
+}
+
+.vtr-ach-summary-count {
+  color: var(--vtr-dim);
+  font-size: calc(12px * var(--vtr-fs, 1));
+}
+
+.vtr-ach-summary-none {
+  color: var(--vtr-faint);
+  font-size: calc(12px * var(--vtr-fs, 1));
+}
+
+
+/* ── Empty state (achievements panel, before the first sync) ─────── */
+.vtr-empty-state {
+  color: var(--vtr-dim);
+  padding: 40px 8px;
+  max-width: 42ch;
+}
+.vtr-empty-icon {
+  color: var(--vtr-faint);
+  margin-bottom: 10px;
+}
+.vtr-empty-icon .svg-icon {
+  width: 24px;
+  height: 24px;
+}
+.vtr-empty-title {
+  color: var(--vtr-text);
+  font-size: calc(14px * var(--vtr-fs, 1));
+  margin-bottom: 4px;
+}
+.vtr-button {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 14px;
+  border: 1px solid var(--vtr-accent);
+  border-radius: 8px;
+  color: var(--vtr-accent);
+  text-align: center;
+  cursor: pointer;
+}
+/* Settings tab bar — a horizontal row of section buttons; the active one is
+   lit with the accent. Mirrors the library modal's left-nav in spirit. */
+/* Horizontal category tabs above the active category's panel. */
+.vtr-settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 8px;
+}
+
+.vtr-settings-tab {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: calc(13px * var(--vtr-fs, 1));
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.vtr-settings-tab:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.vtr-settings-tab.is-active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-weight: 500;
+}
+
+/* Secondary sub-section nav under the category tabs. */
+.vtr-settings-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -6px 0 16px;
+}
+.vtr-settings-subtab {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: calc(12.5px * var(--vtr-fs, 1));
+  cursor: pointer;
+  box-shadow: none;
+}
+.vtr-settings-subtab:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+.vtr-settings-subtab.is-active {
+  color: var(--text-accent);
+  box-shadow: inset 0 0 0 1px var(--interactive-accent);
+}
+
+/* A heading stripped of its label (sub-tab names it) but kept for its control. */
+.vtr-settings .vtr-heading-bare {
+  justify-content: flex-end;
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Drag-to-reorder rows: six-dot grip (as in Browse) + drag states. */
+.vtr-grip {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  color: var(--text-faint);
+  cursor: grab;
+}
+.vtr-grip svg {
+  width: 16px;
+  height: 16px;
+}
+.setting-item.is-dragging {
+  opacity: 0.5;
+}
+.setting-item.is-drop {
+  box-shadow: inset 0 2px 0 var(--interactive-accent);
+}
+
+/* ============================================================
+   Objects hub (Capacities-style, clean/rounded — the one view
+   that trades the chamfer for soft corners, by design). Types
+   come from templates; colours are per-type via --hue.
+   ============================================================ */
+.vtr-objects { flex: 1; display: flex; flex-direction: column; height: 100%; min-width: 0; overflow: hidden;
+  /* The hub reads in the user's own Obsidian reading font — clean, Capacities-like. */
+  font-family: var(--font-text);
+  /* Accent comes from Obsidian's own accent, not the plugin's HUD accent. */
+  --vtr-accent: var(--interactive-accent);
+  color: var(--vtr-text); }
+.vtr-objects-body { flex: 1; display: grid; grid-template-columns: 240px 1fr; min-height: 0; overflow: hidden; }
+/* Hide scrollbars across the hub's scroll areas (scrolling still works). */
+.vtr-objects-main, .vtr-objects-side, .vtr-objects-preview, .vtr-objects-solo { scrollbar-width: none; }
+.vtr-objects-main::-webkit-scrollbar, .vtr-objects-side::-webkit-scrollbar,
+.vtr-objects-preview::-webkit-scrollbar, .vtr-objects-solo::-webkit-scrollbar { display: none; }
+/* Hub sidebar collapsed (top-bar toggle): drop the sidebar column and let the
+   vault selector sit inline with the window controls. */
+.vtr-objects.is-sidecollapsed .vtr-objects-body { grid-template-columns: 1fr; }
+.vtr-objects.is-sidecollapsed .vtr-objects-side { display: none; }
+.vtr-objects.is-sidecollapsed .vtr-objects-main { margin-left: 12px; }
+.vtr-objects.is-sidecollapsed .vtr-objects-topbar { grid-template-columns: auto 1fr; }
+.vtr-objects.is-sidecollapsed .vtr-objects-topleft { padding-right: 4px; }
+.vtr-objects.is-sidecollapsed .vtr-objects-universe { display: none; }
+
+/* Capacities-style window top bar (native Obsidian tab hidden). Mirrors the body
+   grid — vault selector over the sidebar, controls over the content column. */
+.vtr-objects-topbar { display: grid; grid-template-columns: 240px 1fr; align-items: center; height: 44px; flex: none;
+  background: var(--vtr-canvas); -webkit-app-region: drag; }
+.vtr-objects-topbar > * { -webkit-app-region: no-drag; }
+.vtr-objects-topleft { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 6px 0 10px; min-width: 0; }
+.vtr-objects-topmain { display: flex; align-items: center; gap: 4px; padding: 0 10px; min-width: 0; }
+.vtr-objects-universe { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 8px; cursor: pointer; max-width: 210px; }
+.vtr-objects-universe:hover { background: var(--vtr-panel); }
+.vtr-objects-universe-i { display: inline-flex; color: var(--vtr-dim); }
+.vtr-objects-universe-i svg { width: 16px; height: 16px; display: block; }
+.vtr-objects-universe-n { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vtr-objects-universe-c { display: inline-flex; color: var(--vtr-faint); }
+.vtr-objects-universe-c svg { width: 14px; height: 14px; display: block; }
+.vtr-objects-topnav { display: flex; align-items: center; gap: 2px; }
+.vtr-objects-tabs { display: flex; align-items: center; gap: 3px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+.vtr-objects-tabs::-webkit-scrollbar { display: none; }
+/* Top-strip tab (one per open object). `is-strip` because the collection tabs
+   below reuse .vtr-objects-tab and their later rules would otherwise win. */
+.vtr-objects-tab.is-strip { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 7px; border-radius: 7px; cursor: pointer; color: var(--vtr-dim); font-size: 13px; max-width: 260px; flex: none; }
+.vtr-objects-tab.is-dragging { opacity: .4; }
+.vtr-objects-tab.is-dragover { box-shadow: inset 2px 0 0 var(--vtr-accent); }
+.vtr-objects-tab:hover, .vtr-objects-tab.is-active { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-tab-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects-tab-lead { position: relative; width: 26px; height: 26px; flex: none; display: flex; align-items: center; justify-content: center; }
+.vtr-objects-tab-lead .vtr-objects-ico { transition: opacity .1s; }
+.vtr-objects-tab-x { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; border-radius: 3px; opacity: 0; cursor: pointer; }
+.vtr-objects-tab:hover .vtr-objects-tab-lead .vtr-objects-ico { opacity: 0; }
+.vtr-objects-tab:hover .vtr-objects-tab-x { opacity: .7; }
+.vtr-objects-tab-x:hover { opacity: 1; background: var(--vtr-line); }
+.vtr-objects-tab-x svg { width: 12px; height: 12px; }
+.vtr-objects-topbtn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; color: var(--vtr-dim); }
+.vtr-objects-topbtn:hover { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-topbtn svg { width: 17px; height: 17px; display: block; }
+.vtr-objects-tcrumbs { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.vtr-objects-tcrumb { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 7px; cursor: pointer; color: var(--vtr-dim); font-size: 13px; white-space: nowrap; }
+.vtr-objects-tcrumb:hover { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-tcrumb svg { width: 15px; height: 15px; display: block; }
+.vtr-objects-tcrumb.is-last { color: var(--vtr-text); font-weight: 500; cursor: default; }
+.vtr-objects-tcrumb.is-last:hover { background: transparent; }
+.vtr-objects-topright { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.vtr-objects input, .vtr-objects button, .vtr-objects select { font-family: inherit; }
+
+/* Neutral Capacities palette: white surfaces on a faint canvas, no HUD tint.
+   Only --vtr-accent (the custom accent) carries through. */
+.vtr-objects { --vtr-bg: #ffffff; --vtr-panel: #e9ebef; --vtr-rail: #ffffff; --vtr-line: #e6e8ec;
+  --vtr-text: #1d2330; --vtr-dim: #5a6472; --vtr-faint: #98a0ac; --vtr-canvas: #eceef1;
+  background: var(--vtr-canvas); }
+.theme-dark .vtr-objects { --vtr-bg: #26282c; --vtr-panel: #303236; --vtr-rail: #232427; --vtr-line: #383a3f;
+  --vtr-text: #e6e8ec; --vtr-dim: #a2a8b2; --vtr-faint: #6b7178; --vtr-canvas: #1c1d20; }
+
+/* sidebar */
+.vtr-objects-side { background: transparent; padding: 14px 10px; display: flex; flex-direction: column; gap: 3px; overflow: auto; }.vtr-objects-sec { font-size: 11px; color: var(--vtr-faint); padding: 8px 9px 5px; }
+.vtr-objects-nav { display: flex; align-items: center; gap: 11px; padding: 7px 9px; border-radius: 8px; cursor: pointer; color: var(--vtr-dim); }
+.vtr-objects-nav:hover { background: var(--vtr-panel); }
+.vtr-objects-nav.is-on { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-nav-t { flex: 1; font-size: 13.5px; }
+.vtr-objects-nav-c { font-size: 11px; color: var(--vtr-faint); font-variant-numeric: tabular-nums; }
+.vtr-objects-foot { margin-top: auto; padding-top: 8px; }
+.vtr-objects-nav.is-icononly { width: fit-content; }
+/* Collections nested under their type: a caret slot on every row keeps the icons
+   aligned whether or not the type has any. */
+.vtr-objects-nav { gap: 8px; }
+.vtr-objects-navcar { width: 13px; height: 13px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--vtr-faint); border-radius: 3px; }
+.vtr-objects-navcar svg { width: 13px; height: 13px; transition: transform .12s ease; }
+.vtr-objects-navcar.is-open svg { transform: rotate(90deg); }
+.vtr-objects-navcar:hover { color: var(--vtr-text); }
+.vtr-objects-nav.is-sub { padding-left: 30px; }
+.vtr-objects-nav.is-sub .vtr-objects-nav-t { font-size: 12.5px; }
+.vtr-objects-navf { display: inline-flex; color: var(--vtr-faint); }
+.vtr-objects-navf svg { width: 14px; height: 14px; }
+.vtr-objects-nav.is-sub.is-on .vtr-objects-navf { color: var(--vtr-accent); }
+
+/* per-type icon chip */
+.vtr-objects-ico { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; flex: none;
+  background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 20%, transparent); color: var(--hue, var(--vtr-accent)); }
+.vtr-objects-ico svg { width: 14px; height: 14px; }
+.vtr-objects-ico.is-big { width: 30px; height: 30px; border-radius: 8px; }
+.vtr-objects-ico.is-big svg { width: 17px; height: 17px; }
+.vtr-objects-ico.is-small { width: 26px; height: 26px; }
+.vtr-objects-ico.is-plain { background: var(--vtr-panel); color: var(--vtr-dim); }
+
+/* main */
+/* The whole right pane is a floating card over the canvas, Capacities-style. */
+.vtr-objects-main { overflow: auto; padding: 30px 40px 90px; margin: 0 12px 12px 0;
+  background: var(--vtr-bg); border: 1px solid var(--vtr-line); border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 25, 40, .05), 0 12px 34px -18px rgba(15, 25, 40, .20); }
+
+/* An object opened in its own native tab: the same neutral surface, centered. */
+.vtr-objects-solo { background: var(--vtr-canvas); display: block; overflow: auto; }
+.vtr-objects-page { max-width: 820px; margin: 0 auto; padding: 40px 44px 90px; }
+.vtr-objects-chead { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
+.vtr-objects-chead h1 { font-size: calc(25px * var(--vtr-fs, 1)); font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.vtr-objects-grow { flex: 1; }.vtr-objects-viewbar { display: flex; align-items: center; margin-bottom: 22px; }
+.vtr-objects-count { font-size: 12.5px; color: var(--vtr-faint); }
+
+/* cards */
+.vtr-objects-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 13px; }
+.vtr-objects-card { border: 1px solid var(--vtr-line); border-radius: 12px; padding: 15px; cursor: pointer; background: var(--vtr-bg);
+  box-shadow: 0 1px 2px rgba(15, 25, 40, .05), 0 6px 16px -8px rgba(15, 25, 40, .12);
+  transition: box-shadow .14s ease, transform .14s ease; }
+.vtr-objects-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(15, 25, 40, .06), 0 14px 30px -10px rgba(15, 25, 40, .20); }
+.vtr-objects-card-t { font-size: 15px; font-weight: 600; margin-bottom: 11px; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.vtr-objects-card-r { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 12.5px; }
+.vtr-objects-card-prev { grid-column: 1 / -1; color: var(--vtr-dim); font-size: 12.5px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.vtr-objects-card-k { color: var(--vtr-faint); }
+.vtr-objects-card-v { color: var(--vtr-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* list */
+.vtr-objects-list { display: flex; flex-direction: column; }
+.vtr-objects-lrow { display: grid; grid-template-columns: 1fr 200px 90px; gap: 14px; align-items: center; padding: 12px 8px; border-bottom: 1px solid var(--vtr-line); cursor: pointer; }
+.vtr-objects-lrow:hover { background: var(--vtr-panel); }
+.vtr-objects-lt { font-weight: 600; }
+.vtr-objects-lm { color: var(--vtr-faint); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects-ls { font-size: 11px; color: var(--vtr-accent); font-weight: 600; }
+
+/* object page */
+.vtr-objects-crumbs { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; font-size: 12.5px; }
+.vtr-objects-crumb { color: var(--vtr-accent); cursor: pointer; }
+.vtr-objects-sep { color: var(--vtr-faint); }
+.vtr-objects-props { background: var(--vtr-panel); border: 1px solid var(--vtr-line); border-radius: 10px; padding: 6px 14px; }
+.vtr-objects-prow { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 7px 0; }
+.vtr-objects-prow-x { position: absolute; top: 6px; right: 0; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--vtr-faint); font-size: 15px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity .1s; }
+.vtr-objects-prow:hover .vtr-objects-prow-x { opacity: 1; }
+.vtr-objects-prow-x:hover { background: var(--vtr-line); color: var(--vtr-text); }
+.vtr-objects-pfold { display: flex; align-items: center; gap: 6px; padding: 6px 8px; color: var(--vtr-faint); font-size: 12px; cursor: pointer; border-radius: 6px; }
+.vtr-objects-pfold:hover { color: var(--vtr-text); background: var(--vtr-hover); }
+.vtr-objects-pfold svg { width: 13px; height: 13px; }
+.vtr-objects-propadd { display: flex; align-items: center; gap: 6px; padding: 10px 0 4px; color: var(--vtr-dim); font-size: 12px; cursor: pointer; }
+.vtr-objects-propadd:hover { color: var(--vtr-text); }
+.vtr-objects-propadd .svg-icon { width: 14px; height: 14px; }
+.vtr-objects-pk { display: flex; align-items: center; gap: 6px; color: var(--vtr-dim); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.vtr-objects-pk-c { font-size: 11px; letter-spacing: 0; padding: 1px 7px; border-radius: 20px; background: var(--vtr-panel); }
+.vtr-objects-pk-chev { display: inline-flex; cursor: pointer; color: var(--vtr-faint); }
+.vtr-objects-pk-chev svg { width: 13px; height: 13px; }
+.vtr-objects-prow.is-collapsed .vtr-objects-pk-chev { transform: rotate(-90deg); }
+.vtr-objects-prow.is-collapsed .vtr-objects-pv { display: none; }
+.vtr-objects-pv { font-size: 13.5px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.vtr-objects-empty { color: var(--vtr-faint); }
+.vtr-objects input.vtr-objects-input { width: 100%; background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 2px 0; color: var(--vtr-text); font-family: var(--font-text); font-size: 13.5px; }
+.vtr-objects input.vtr-objects-input:hover { border-color: var(--vtr-line); background: transparent; }
+.vtr-objects input.vtr-objects-input:focus { outline: none; border-color: var(--vtr-accent); box-shadow: 0 0 0 3px var(--vtr-glow-soft); }
+.vtr-objects-ref { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 3px 8px; background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 16%, transparent); color: var(--hue, var(--vtr-accent)); border-radius: 20px; font-size: 12.5px; cursor: pointer; font-weight: 500; }
+.vtr-objects-ref:hover { box-shadow: 0 0 0 1px var(--hue, var(--vtr-accent)); }
+.vtr-objects-ref-d { width: 5px; height: 5px; background: var(--hue, var(--vtr-accent)); border-radius: 50%; }
+.vtr-objects-ref.is-add { padding: 3px 7px; background: transparent; border: 1px dashed var(--vtr-line); color: var(--vtr-faint); }
+.vtr-objects-ref.is-add:hover { box-shadow: none; border-color: var(--vtr-accent); color: var(--vtr-accent); }
+.vtr-objects-ref-i { display: inline-flex; }
+.vtr-objects-ref-i svg { width: 13px; height: 13px; }
+.vtr-objects-ach { margin-top: 38px; border-top: 1px solid var(--vtr-line); padding-top: 20px; }
+.vtr-objects-refs { margin-top: 38px; border-top: 1px solid var(--vtr-line); padding-top: 16px; max-width: 640px; }
+.vtr-objects-refs-h { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; font-size: 13.5px; font-weight: 600; }
+.vtr-objects-refs-c { color: var(--vtr-faint); font-weight: 400; font-size: 12px; }
+.vtr-objects-refs-empty { color: var(--vtr-faint); font-size: 12.5px; }
+.vtr-objects-bl { display: flex; align-items: center; gap: 11px; padding: 11px 13px; border: 1px solid var(--vtr-line); border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+.vtr-objects-bl:hover { border-color: var(--vtr-accent); }
+.vtr-objects-bl-b { flex: 1; }
+.vtr-objects-bl-t { font-size: 13.5px; font-weight: 600; }
+.vtr-objects-bl-s { color: var(--vtr-faint); font-size: 11.5px; }
+
+/* structure */
+.vtr-objects-note { color: var(--vtr-dim); margin-bottom: 22px; font-size: 13px; }
+.vtr-objects-sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 12px; margin: 10px 0 30px; }
+.vtr-objects-tcard { display: flex; flex-direction: column; gap: 12px; min-height: 104px; border: 1px solid var(--vtr-line); border-radius: 12px; padding: 15px; cursor: pointer; background: var(--vtr-bg);
+  box-shadow: 0 1px 2px rgba(15, 25, 40, .05), 0 6px 16px -8px rgba(15, 25, 40, .12); transition: box-shadow .14s ease, transform .14s ease; }
+.vtr-objects-tcard:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(15, 25, 40, .06), 0 14px 30px -10px rgba(15, 25, 40, .20); }
+.vtr-objects-tcard-n { font-size: 14px; font-weight: 600; }
+.vtr-objects-sub { font-size: 13.5px; font-weight: 600; margin: 30px 0 8px; }
+.vtr-objects-eprops { border-top: 1px solid var(--vtr-line); max-width: 620px; }
+.vtr-objects-ep { padding: 6px 4px; border-bottom: 1px solid var(--vtr-line); }/* empty state */
+.vtr-objects-emptystate { text-align: center; color: var(--vtr-dim); padding: 60px 20px; }
+.vtr-objects-empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: var(--vtr-faint); }
+.vtr-objects-empty-icon svg { width: 30px; height: 30px; }
+.vtr-objects-empty-title { font-size: 16px; font-weight: 600; color: var(--vtr-text); margin-bottom: 6px; }
+
+/* create form: the "auto" pill next to a prefilled label */
+
+/* object types editor (Capacities-style) */
+.vtr-objects-tcard.is-create { border: 1px dashed var(--vtr-line); background: transparent; box-shadow: none; transform: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--vtr-faint); }
+.vtr-objects-tcard.is-create:hover { transform: none; box-shadow: none; }
+.vtr-objects-tcard.is-create svg { width: 20px; height: 20px; }
+.vtr-objects-tcard.is-create:hover { border-color: var(--vtr-accent); color: var(--vtr-accent); }
+
+.vtr-objects-fields { display: flex; flex-wrap: wrap; gap: 14px; margin: 4px 0 20px; }
+.vtr-objects-field { display: flex; flex-direction: column; gap: 5px; min-width: 170px; }
+.vtr-objects-field.is-grow { flex: 1; min-width: 240px; }
+.vtr-objects-flabel { font-size: 11px; color: var(--vtr-dim); }
+.vtr-objects-finput { width: 100%; padding: 8px 11px; border: 1px solid var(--vtr-line); border-radius: 8px; background: var(--vtr-bg); color: var(--vtr-text); font-size: 13.5px; }
+.vtr-objects-finput:focus { outline: none; border-color: var(--vtr-accent); box-shadow: 0 0 0 3px var(--vtr-glow-soft); }
+
+.vtr-objects-iconrow { display: flex; align-items: center; gap: 9px; }
+.vtr-objects-iconrow.is-pick { cursor: pointer; width: fit-content; }
+.vtr-objects-iconrow.is-pick:hover .vtr-objects-iconpick-t { color: var(--vtr-text); }
+.vtr-objects-iconpick-t { color: var(--vtr-dim); font-size: 13px; }
+.vtr-query-icon { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 38px; }
+.vtr-objects-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.vtr-objects-swatch { width: 22px; height: 22px; border-radius: 6px; cursor: pointer; }
+.vtr-objects-swatch.is-on { box-shadow: 0 0 0 2px var(--vtr-bg), 0 0 0 4px var(--vtr-accent); }
+
+.vtr-objects-ep { display: flex; align-items: center; gap: 10px; }
+.vtr-objects-ep-ico { color: var(--vtr-faint); flex: none; display: flex; }
+.vtr-objects-ep-ico svg { width: 14px; height: 14px; }
+.vtr-objects-ep .vtr-objects-epkey { flex: 1; border: 1px solid transparent; background: transparent; border-radius: 6px; padding: 5px 8px; color: var(--vtr-text); font-size: 13.5px; }
+.vtr-objects-ep .vtr-objects-epkey:hover { border-color: var(--vtr-line); }
+.vtr-objects-ep .vtr-objects-epkey:focus { border-color: var(--vtr-accent); outline: none; }
+.vtr-objects-ep .vtr-objects-epkind { padding: 5px 8px; border: 1px solid var(--vtr-line); border-radius: 6px; background: var(--vtr-bg); color: var(--vtr-dim); font-size: 11px; }
+.vtr-objects-ep .vtr-objects-epopts { flex: 1; min-width: 0; border: 1px solid var(--vtr-line); background: transparent; border-radius: 6px; padding: 5px 8px; color: var(--vtr-dim); font-size: 11.5px; }
+.vtr-objects-ep .vtr-objects-epopts:focus { border-color: var(--vtr-accent); outline: none; }
+.vtr-objects-ep .vtr-objects-epdel { color: var(--vtr-faint); cursor: pointer; display: flex; }
+.vtr-objects-ep .vtr-objects-epdel svg { width: 14px; height: 14px; }
+.vtr-objects-ep .vtr-objects-epdel:hover { color: #d05a5a; }
+
+.vtr-objects-addprop { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1px solid var(--vtr-line); border-radius: 8px; color: var(--vtr-dim); font-size: 12.5px; cursor: pointer; margin-top: 10px; }
+.vtr-objects-addprop svg { width: 14px; height: 14px; }
+.vtr-objects-addprop:hover { border-color: var(--vtr-accent); color: var(--vtr-accent); }
+
+.vtr-objects-lock { display: flex; align-items: center; gap: 9px; padding: 11px 14px; background: var(--vtr-panel); border-radius: 9px; color: var(--vtr-dim); font-size: 12.5px; margin: 6px 0 10px; }
+.vtr-objects-lock svg { width: 15px; height: 15px; color: var(--vtr-faint); }
+
+.vtr-objects-tpls { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+.vtr-objects-tpl { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 20px; background: color-mix(in srgb, var(--vtr-accent) 14%, transparent); color: var(--vtr-accent); font-size: 12.5px; cursor: pointer; }
+.vtr-objects-tpl svg { width: 13px; height: 13px; }
+.vtr-objects-tpl-x { color: inherit; opacity: .6; cursor: pointer; }
+.vtr-objects-tpl-x:hover { opacity: 1; }
+.vtr-objects-addtpl { display: inline-flex; align-items: center; gap: 6px; color: var(--vtr-accent); font-size: 12.5px; cursor: pointer; }
+.vtr-objects-addtpl svg { width: 14px; height: 14px; display: block; }
+.vtr-objects-addtpl:hover { text-decoration: underline; }
+
+.vtr-objects-danger { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 9px; background: #c0392b; color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; }
+.vtr-objects-danger svg { width: 14px; height: 14px; }
+.vtr-objects-danger:hover { filter: brightness(1.08); }
+.vtr-objects-danger-note { color: var(--vtr-dim); font-size: 12.5px; max-width: 60ch; margin-bottom: 12px; }
+
+.vtr-objects-typepill { display: inline-flex; align-items: center; gap: 7px; padding: 3px 11px; border-radius: 7px; font-size: 13px; font-weight: 600; background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 16%, transparent); color: var(--hue, var(--vtr-accent)); }
+.vtr-objects-typepill svg { width: 13px; height: 13px; }
+
+/* Weblink card — image preview + title + site, Capacities-style. */
+.vtr-objects-card.vtr-objects-wl { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.vtr-objects-wl-img { width: 100%; height: 120px; object-fit: cover; display: block; background: var(--vtr-rail); }
+.vtr-objects-wl-b { padding: 12px 14px; }
+.vtr-objects-wl-t { font-size: 14px; font-weight: 600; line-height: 1.3; }
+/* Task card — done checkbox toggles completion inline. */
+.vtr-objects-card.vtr-objects-task { display: flex; flex-direction: column; gap: 9px; }
+.vtr-objects-task-h { display: flex; align-items: center; gap: 10px; }
+.vtr-objects-task-h input { flex: none; width: 16px; height: 16px; accent-color: var(--vtr-accent); cursor: pointer; }
+.vtr-objects-task-t { font-size: 14.5px; font-weight: 600; }
+.vtr-objects-task-t.is-done { text-decoration: line-through; color: var(--vtr-faint); }
+.vtr-objects-task-m { font-size: 11.5px; color: var(--vtr-dim); padding-left: 26px; }
+
+/* Weblink card — Capacities style: type pill, big image, title, favicon+host, tags. */
+.vtr-objects-typechip { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin: 13px 14px 0; padding: 3px 9px; border-radius: 8px; font-size: 12px; font-weight: 500; background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 22%, var(--vtr-bg)); border: 1px solid color-mix(in srgb, var(--hue, var(--vtr-accent)) 34%, transparent); color: var(--hue, var(--vtr-accent)); }
+.vtr-objects-typechip svg { width: 12px; height: 12px; }
+.vtr-objects-wl-img { margin-top: 11px; height: 150px; }
+.vtr-objects-wl-u { display: flex; align-items: center; gap: 7px; margin-top: 9px; font-size: 11.5px; color: var(--vtr-faint); }
+.vtr-objects-wl-fav { width: 15px; height: 15px; border-radius: 3px; flex: none; }
+.vtr-objects-wl-u span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects-wl-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 11px; }
+.vtr-objects-wl-tag { font-size: 10.5px; padding: 2px 9px; border-radius: 20px; background: var(--vtr-panel); color: var(--vtr-dim); }
+
+/* Add Weblink modal — minimal Paste-URL. */
+.vtr-wl-modal { width: 640px; max-width: 92vw; }
+.vtr-wl-input { margin-top: 4px; }
+.vtr-wl-input .vtr-modal-input-el { padding: 12px 14px; font-size: 15px; }
+.vtr-wl-status { margin-top: 10px; font-size: 12px; color: var(--vtr-faint); min-height: 16px; }
+
+/* Collection tabs (Overview / All) + icon-only toolbar. */
+.vtr-objects-tabs { display: flex; gap: 6px; }
+.vtr-objects-tab { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 7px; font-size: 13px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects-tab:hover { background: var(--vtr-panel); }
+.vtr-objects-tab.is-on { background: var(--vtr-panel); color: var(--vtr-text); }
+/* A collection page lists the type's queries first, then its own. */
+.vtr-objects-tabrule { width: 1px; height: 15px; background: var(--vtr-line); margin: 0 8px; flex: none; }
+.vtr-objects-tab.is-scoped .vtr-objects-tab-i { color: var(--vtr-accent); }
+.vtr-objects-tools { display: flex; align-items: center; gap: 2px; }
+.vtr-objects-tool { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; color: var(--vtr-faint); cursor: pointer; }
+.vtr-objects-tool:hover { background: var(--vtr-panel); color: var(--vtr-dim); }
+.vtr-objects-tool.is-on { color: var(--vtr-accent); background: color-mix(in srgb, var(--vtr-accent) 13%, transparent); }
+.vtr-objects-tool svg { width: 16px; height: 16px; }
+.vtr-objects-filter { margin-bottom: 16px; }
+.vtr-objects-filter input { width: 100%; max-width: 340px; padding: 8px 12px; border: 1px solid var(--vtr-line); border-radius: 8px; background: var(--vtr-bg); color: var(--vtr-text); font-family: var(--font-text); font-size: 13.5px; }
+.vtr-objects-filter input:focus { outline: none; border-color: var(--vtr-accent); box-shadow: 0 0 0 3px var(--vtr-glow-soft); }
+/* Collections on the Overview — manual sub-groups of a type. */
+/* Collapsible section header — chevron hidden until hover, rounded hover highlight
+   hugging the title (Capacities style). The row is full-width so an action (e.g.
+   "+ Collection") can pin right; only the title chip (.hit) hovers and toggles. */
+.vtr-objects-sech { display: flex; align-items: center; margin: 34px 0 12px; }
+.vtr-objects-sech-hit { display: inline-flex; align-items: center; gap: 6px; line-height: 1;
+  font-size: 16px; font-weight: 700; color: var(--vtr-text); padding: 5px 9px; margin-left: -9px;
+  border-radius: 8px; cursor: pointer; user-select: none; }
+.vtr-objects-sech-hit:hover { background: color-mix(in srgb, var(--vtr-dim) 10%, transparent); }
+.vtr-objects-sech-chev { order: 9; display: inline-flex; color: var(--vtr-dim); opacity: 0; transition: opacity .1s ease, transform .12s ease; }
+.vtr-objects-sech-hit:hover .vtr-objects-sech-chev { opacity: 1; }
+.vtr-objects-sech.is-collapsed .vtr-objects-sech-chev { opacity: 1; transform: rotate(-90deg); }
+.vtr-objects-sech-chev svg { width: 16px; height: 16px; display: block; }
+.vtr-objects-sech-c { font-size: 12px; font-weight: 500; color: var(--vtr-faint); }
+.vtr-objects-sech.is-collapsed + .vtr-objects-sech-body { display: none; }
+.vtr-objects-sech-add { margin-left: auto; font-weight: 500; }
+.vtr-objects-collgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+.vtr-objects-collcard { border: 1px solid var(--vtr-line); border-radius: 12px; padding: 15px; cursor: pointer; background: var(--vtr-bg);
+  box-shadow: 0 1px 2px rgba(15, 25, 40, .05), 0 6px 16px -8px rgba(15, 25, 40, .12); transition: box-shadow .14s ease, transform .14s ease; }
+.vtr-objects-collcard:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(15, 25, 40, .06), 0 14px 30px -10px rgba(15, 25, 40, .20); }
+.vtr-objects-collcard-t { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.vtr-objects-collcard-t svg { width: 15px; height: 15px; color: var(--vtr-dim); }
+.vtr-objects-collcard-c { font-size: 12px; color: var(--vtr-faint); }
+
+/* Sidebar New / Search as plain rows (Capacities-style), not a button + input. */
+.vtr-objects-navtop { display: flex; align-items: center; gap: 11px; padding: 7px 9px; border-radius: 8px; cursor: pointer; color: var(--vtr-dim); font-size: 13.5px; }
+.vtr-objects-navtop:hover { background: var(--vtr-panel); }
+.vtr-objects-navtop.is-on { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-navtop > span:first-child { display: inline-flex; align-items: center; }
+.vtr-objects-navtop svg { width: 17px; height: 17px; }
+
+/* Type chip: centre the icon with the label (svg would otherwise sit on the baseline). */
+.vtr-objects-typechip > span:first-child { display: inline-flex; align-items: center; }
+
+/* Collection header: top-right control cluster + split New button. */
+.vtr-objects-headctrls { display: flex; align-items: center; gap: 3px; }
+.vtr-objects-newbtn { display: inline-flex; align-items: stretch; margin-left: 7px; border-radius: 8px; overflow: hidden; background: var(--vtr-accent); color: var(--vtr-on-accent); }
+.vtr-objects-newbtn:hover { filter: brightness(1.06); }
+.vtr-objects-newbtn-main { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.vtr-objects-newbtn-main > span:first-child { display: inline-flex; align-items: center; }
+.vtr-objects-newbtn-main svg { width: 15px; height: 15px; }
+.vtr-objects-newbtn-caret { display: inline-flex; align-items: center; padding: 0 8px; cursor: pointer; border-left: 1px solid color-mix(in srgb, var(--vtr-on-accent) 25%, transparent); }
+.vtr-objects-newbtn-caret svg { width: 15px; height: 15px; }
+
+/* Complete-pass refinements toward Capacities. */
+.vtr-objects-tab { display: inline-flex; align-items: center; gap: 7px; }
+.vtr-objects-tab-i { display: inline-flex; align-items: center; }
+.vtr-objects-tab svg { width: 15px; height: 15px; }
+.vtr-objects-chead h1 { letter-spacing: -.01em; }
+
+/* ── Object page (Capacities-style) + type-editor layout picker ───────────── */
+.vtr-objects-solo { background: var(--vtr-bg); }
+.vtr-objects-page.is-wide { max-width: none; padding: 20px 32px 90px; }
+/* Multi-column layouts fill the pane so the property sidebar sits flush left. */
+.vtr-objects-page.is-profile, .vtr-objects-page.is-encyclopedia { max-width: none; margin: 0; padding: 30px 40px 90px; }
+/* Inside the hub the main column already supplies the margin, so the page adds none
+   — this keeps the object page aligned with the collection cards. */
+.vtr-objects-main .vtr-objects-page, .vtr-objects-main .vtr-objects-page.is-profile, .vtr-objects-main .vtr-objects-page.is-encyclopedia { max-width: none; margin: 0; padding: 0 0 60px; }
+
+/* Cover */
+.vtr-objects-pcover { width: 100%; margin-bottom: 24px; }
+.vtr-objects-pcover img { width: 100%; height: 210px; object-fit: cover; border-radius: 12px; display: block; }
+.vtr-objects-pcover.is-full img { height: auto; max-height: 460px; object-fit: contain; }
+
+/* Top bar */
+.vtr-objects-phead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.vtr-objects-phead-l, .vtr-objects-phead-r { display: flex; align-items: center; gap: 8px; }
+.vtr-objects-ptypepill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 9px; font-size: 13px; font-weight: 500; cursor: pointer; background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 22%, var(--vtr-bg)); border: 1px solid color-mix(in srgb, var(--hue, var(--vtr-accent)) 34%, transparent); color: var(--hue, var(--vtr-accent)); }
+.vtr-objects-ptypepill svg { width: 14px; height: 14px; }
+.vtr-objects-ptypepill span:first-child { display: inline-flex; align-items: center; }
+.vtr-objects-ptypepill span:last-child { opacity: .65; }
+.vtr-objects-ptypepill span:last-child svg { width: 13px; height: 13px; }
+.vtr-objects-pcoll { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 8px; font-size: 13px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects-pcoll:hover { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-pcoll svg { width: 15px; height: 15px; }
+.vtr-objects-pcoll > span:first-child { display: inline-flex; }
+.vtr-objects-pmore { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 8px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects-pmore:hover { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-pmore svg { width: 18px; height: 18px; }
+
+/* Title + chips */
+.vtr-objects-ptitle { font-size: 33px; font-weight: 800; line-height: 1.15; margin: 6px 0 12px; color: var(--vtr-text); letter-spacing: -.01em; }
+.vtr-objects-ptitle[contenteditable="true"] { cursor: text; outline: none; padding: 2px 8px; margin-left: -8px; border-radius: 8px; }
+.vtr-objects-ptitle[contenteditable="true"]:hover { background: color-mix(in srgb, var(--vtr-dim) 10%, transparent); }
+.vtr-objects-ptitle[contenteditable="true"]:focus { background: color-mix(in srgb, var(--vtr-dim) 14%, transparent); }
+.vtr-objects-pchips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
+.vtr-objects-pdesc { font-size: 14.5px; line-height: 1.55; color: var(--vtr-dim); margin-bottom: 26px; padding: 5px 8px; margin-left: -8px; border-radius: 7px; cursor: text; }
+.vtr-objects-pdesc:hover { background: color-mix(in srgb, var(--vtr-dim) 10%, transparent); }
+.vtr-objects-pdesc.is-empty { color: var(--vtr-faint); }
+/* Text Stats floating card (rendered on document.body, outside .vtr). */
+.vtr-objects-statcard { position: fixed; z-index: var(--layer-menu, 100); min-width: 244px; padding: 10px 4px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); border-radius: 10px; box-shadow: 0 4px 14px rgba(0,0,0,.12), 0 22px 44px -20px rgba(0,0,0,.3); font-size: 13.5px; }
+.vtr-objects-statcard .vtr-objects-statrow { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 5px 15px; }
+.vtr-objects-statcard .vtr-objects-statk { color: var(--text-muted); }
+.vtr-objects-statcard .vtr-objects-statv { color: var(--text-normal); font-variant-numeric: tabular-nums; }
+.vtr-objects-statcard .vtr-objects-statrow.is-muted .vtr-objects-statk,
+.vtr-objects-statcard .vtr-objects-statrow.is-muted .vtr-objects-statv { color: var(--text-muted); }
+.vtr-objects-statsep { height: 1px; background: var(--background-modifier-border); margin: 8px 15px; }
+.vtr-objects-plabel { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 7px; font-size: 12.5px; font-weight: 500; background: color-mix(in srgb, var(--vtr-accent) 14%, var(--vtr-bg)); color: var(--vtr-accent); }
+.vtr-objects-plabel:hover .vtr-objects-ptag-x { display: inline-flex; }
+.vtr-objects-plabel-k { font-weight: 400; color: color-mix(in srgb, var(--vtr-accent) 55%, var(--vtr-bg)); }
+.vtr-objects-ptag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 7px; font-size: 12.5px; color: var(--vtr-dim); background: var(--vtr-panel); }
+/* display:none, not opacity: a transparent × still reserves its slot. */
+.vtr-objects-ptag-x { display: none; margin-left: 1px; font-size: 14px; line-height: 1; color: var(--vtr-faint); cursor: pointer; }
+.vtr-objects-ptag:hover .vtr-objects-ptag-x { display: inline-flex; }
+.vtr-objects-ptag-x:hover { color: var(--vtr-text); }
+.vtr-objects-ptag svg { width: 13px; height: 13px; }
+.vtr-objects-ptag.is-add { background: transparent; color: var(--vtr-faint); cursor: pointer; }
+.vtr-objects-ptag.is-add:hover { color: var(--vtr-text); }
+
+/* Prose content */
+.vtr-objects-pcontent { font-family: var(--font-text); font-size: var(--font-text-size); line-height: var(--line-height-normal); color: var(--vtr-text); }
+.vtr-objects-pcontent h1, .vtr-objects-pcontent h2, .vtr-objects-pcontent h3 { font-weight: 700; line-height: 1.3; margin: 1.4em 0 .5em; }
+.vtr-objects-pcontent h1 { font-size: var(--h1-size); }
+.vtr-objects-pcontent h2 { font-size: var(--h2-size); }
+.vtr-objects-pcontent h3 { font-size: var(--h3-size); }
+.vtr-objects-pcontent p { margin: .6em 0; }
+.vtr-objects-pcontent ul, .vtr-objects-pcontent ol { margin: .5em 0; padding-left: 1.4em; }
+.vtr-objects-pcontent li { margin: .28em 0; }
+.vtr-objects-pcontent li::marker { color: var(--vtr-faint); }
+.vtr-objects-pcontent a { color: var(--vtr-accent); text-decoration: none; }
+.vtr-objects-pcontent a:hover { text-decoration: underline; }
+.vtr-objects-pcontent mark { background: color-mix(in srgb, var(--vtr-accent) 24%, transparent); color: inherit; border-radius: 5px; padding: 1px 5px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.vtr-objects-pcontent blockquote { border-left: 3px solid var(--vtr-line); margin: .8em 0; padding: .1em 0 .1em 1em; color: var(--vtr-dim); }
+.vtr-objects-pcontent code { background: var(--vtr-panel); border-radius: 5px; padding: .1em .35em; font-size: .9em; }
+.vtr-objects-pcontent pre { background: var(--vtr-panel); border-radius: 10px; padding: 14px 16px; overflow: auto; }
+.vtr-objects-pcontent pre code { background: none; padding: 0; }
+
+/* Inline object mention/view: type icon + underlined title, no background. */
+.vtr-objects-inlink { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; padding: 0 6px 0 5px; border-radius: 6px; color: var(--vtr-text); text-decoration: none; background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 13%, transparent); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.vtr-objects-inlink:hover { background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 22%, transparent); }
+.vtr-objects-inlink-i { display: inline-flex; align-self: center; color: var(--hue, var(--vtr-accent)); }
+.vtr-objects-inlink-i svg { width: 14px; height: 14px; }
+.vtr-objects-qcard { display: flex; align-items: center; gap: 10px; margin: 10px 0; padding: 10px 12px; border: 1px solid var(--vtr-line); border-radius: 12px; background: var(--vtr-bg); cursor: pointer; }
+.vtr-objects-qcard:hover { border-color: var(--hue, var(--vtr-accent)); }
+.vtr-objects-qcard-i { display: flex; flex: none; color: var(--hue, var(--vtr-accent)); }
+.vtr-objects-qcard-i svg { width: 18px; height: 18px; }
+.vtr-objects-qcard-b { min-width: 0; flex: 1; }
+.vtr-objects-qcard-n { color: var(--vtr-text); font-size: 14px; }
+.vtr-objects-qcard-d { color: var(--vtr-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects-qcard-c { flex: none; padding: 2px 8px; border-radius: 6px; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--hue, var(--vtr-accent)); background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 13%, transparent); }
+
+/* Default link view: how a block-level object reference renders in content. */
+/* 1) Link block — icon + title + type chip + "…" menu. */
+.vtr-objects-linkblock { display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin: 2px 0; border-radius: 8px; cursor: pointer; transition: background .12s ease; }
+.vtr-objects-linkblock:hover { background: var(--vtr-panel); }
+.vtr-objects-linkblock-i { display: inline-flex; flex: none; color: var(--hue, var(--vtr-dim)); }
+.vtr-objects-linkblock-i svg { width: 20px; height: 20px; }
+.vtr-objects-linkblock-t { flex: 1; font-size: 16px; font-weight: 500; color: var(--vtr-text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects-linkblock-meta { display: flex; align-items: center; gap: 6px; flex: none; }
+.vtr-objects-linkblock-more { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; color: var(--vtr-dim); opacity: 0; }
+.vtr-objects-linkblock:hover .vtr-objects-linkblock-more { opacity: 1; }
+.vtr-objects-linkblock-more:hover { background: var(--vtr-bg); color: var(--vtr-text); }
+.vtr-objects-linkblock-more svg { width: 16px; height: 16px; }
+
+/* 3/4) Cards. */
+.vtr-objects-linkcard { margin: 10px 0; border: 1px solid var(--vtr-line); border-radius: 14px; cursor: pointer; background: var(--vtr-bg); transition: box-shadow .14s ease, transform .14s ease; }
+.vtr-objects-linkcard:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(15,25,40,.06), 0 14px 30px -10px rgba(15,25,40,.2); }
+.vtr-objects-linkcard-title { font-size: 16px; font-weight: 700; color: var(--vtr-text); line-height: 1.25; }
+.vtr-objects-linkcard-img { width: 100%; object-fit: cover; display: block; }
+.vtr-objects-linkcard-b { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+/* small card = vertical */
+.vtr-objects-linkcard.is-small { display: block; max-width: 320px; padding: 16px; }
+.vtr-objects-linkcard.is-small .vtr-objects-linkcard-title { margin-bottom: 12px; }
+.vtr-objects-linkcard.is-small .vtr-objects-linkcard-img { height: 190px; border-radius: 8px; margin-bottom: 12px; }
+/* wide card = horizontal, cover on the right */
+.vtr-objects-linkcard.is-wide { display: grid; grid-template-columns: 1fr 150px; gap: 14px; overflow: hidden; align-items: stretch; }
+.vtr-objects-linkcard-wl { padding: 16px 0 16px 18px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; min-width: 0; }
+.vtr-objects-linkcard-wr { position: relative; }
+.vtr-objects-linkcard.is-wide .vtr-objects-linkcard-img { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* Property widgets shared by cards + embed. */
+.vtr-objects-datechip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border: 1px solid var(--vtr-line); border-radius: 7px; font-size: 12.5px; color: var(--vtr-dim); }
+.vtr-objects-datechip svg { width: 13px; height: 13px; }
+.vtr-objects-propv { font-size: 13.5px; color: var(--vtr-text); }
+.vtr-objects-pbar { display: flex; align-items: center; gap: 10px; width: 100%; }
+.vtr-objects-pbar-t { flex: 1; height: 6px; border-radius: 4px; background: color-mix(in srgb, var(--vtr-accent) 20%, transparent); overflow: hidden; }
+.vtr-objects-pbar-f { height: 100%; background: color-mix(in srgb, var(--vtr-accent) 70%, #7b6fe0); border-radius: 4px; }
+.vtr-objects-pbar-v { font-size: 13px; color: var(--vtr-dim); font-variant-numeric: tabular-nums; }
+
+/* 5) Embed — collapsible object with a property table + content. */
+.vtr-objects-linkembed { margin: 12px 0; border: 1px solid var(--vtr-line); border-radius: 12px; overflow: hidden; }
+.vtr-objects-linkembed-h { display: flex; align-items: center; gap: 9px; padding: 10px 14px; background: var(--vtr-canvas); cursor: pointer; }
+.vtr-objects-emb-toggle { display: inline-flex; color: var(--vtr-dim); transition: transform .12s ease; }
+.vtr-objects-emb-toggle svg { width: 16px; height: 16px; }
+.vtr-objects-linkembed.is-collapsed .vtr-objects-emb-toggle { transform: rotate(-90deg); }
+.vtr-objects-linkembed.is-collapsed .vtr-objects-linkembed-b { display: none; }
+.vtr-objects-linkembed-b { border-top: 1px solid var(--vtr-line); }
+.vtr-objects-embtable { padding: 6px 14px; }
+.vtr-objects-embrow { display: grid; grid-template-columns: 180px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--vtr-line); }
+.vtr-objects-embrow:last-child { border-bottom: none; }
+.vtr-objects-embrow-l { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--vtr-dim); }
+.vtr-objects-embrow-l svg { width: 15px; height: 15px; }
+.vtr-objects-embrow-v { min-width: 0; }
+.vtr-objects-linkembed .vtr-objects-pcontent { padding: 14px 16px; }
+.vtr-objects-pcontent hr { border: none; border-top: 1px solid var(--vtr-line); margin: 1.5em 0; }
+.vtr-objects-pcontent img { max-width: 100%; border-radius: 8px; }
+
+/* Two-column layouts */
+.vtr-objects-pcols { display: grid; grid-template-columns: 260px 1fr; gap: 34px; align-items: start; }
+.vtr-objects-pcols.is-enc { grid-template-columns: 210px 1fr 260px; gap: 30px; }
+.vtr-objects-pcol-nav { position: sticky; top: 10px; align-self: start; display: flex; flex-direction: column; gap: 22px; }
+.vtr-objects-pcol-nav .vtr-objects-refs { margin-top: 0; border-top: none; padding-top: 0; max-width: none; }
+.vtr-objects-pcol-nav .vtr-objects-bl { padding: 7px 10px; gap: 8px; }
+.vtr-objects-pcol-nav .vtr-objects-bl-s { display: none; }
+.vtr-objects-pcover-side { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 4px; }
+.vtr-objects-pcover-side img { width: 100%; display: block; }
+.vtr-objects-ptoc { position: sticky; top: 10px; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.vtr-objects-ptoc-i { color: var(--vtr-dim); padding: 3px 8px; border-radius: 6px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects-ptoc-i:hover { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects-pcol-side { display: flex; flex-direction: column; gap: 16px; }
+.vtr-objects-pavatar { width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: var(--vtr-panel); border: 1px solid var(--vtr-line); flex: none; }
+.vtr-objects-pavatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vtr-objects-pcol-main { min-width: 0; }
+/* Encyclopedia: denser reference reading. */
+.vtr-objects .vtr-objects-page.is-encyclopedia .vtr-objects-pcontent { font-size: 14.5px; line-height: 1.6; }
+.vtr-objects .vtr-objects-page.is-encyclopedia .vtr-objects-pcontent h2 { font-size: 18px; }
+.vtr-objects .vtr-objects-page.is-encyclopedia .vtr-objects-pcontent h3 { font-size: 15.5px; }
+
+
+/* Type-editor layout picker */
+.vtr-objects-layoutpick { display: flex; gap: 10px; flex-wrap: wrap; }
+.vtr-objects-layoutopt { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 96px; padding: 12px 8px; border: 1px solid var(--vtr-line); border-radius: 10px; cursor: pointer; font-size: 12px; color: var(--vtr-dim); background: var(--vtr-bg); }
+.vtr-objects-layoutopt:hover { border-color: color-mix(in srgb, var(--vtr-accent) 50%, var(--vtr-line)); }
+.vtr-objects-layoutopt.is-on { border-color: var(--vtr-accent); color: var(--vtr-text); box-shadow: 0 0 0 1px var(--vtr-accent) inset; }
+.vtr-objects-layoutopt svg { width: 22px; height: 22px; }
+.vtr-objects-segbtn { display: inline-flex; padding: 2px; background: var(--vtr-panel); border-radius: 8px; }
+.vtr-objects-segbtn > span { padding: 4px 12px; border-radius: 6px; font-size: 12.5px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects-segbtn > span.is-on { background: var(--vtr-bg); color: var(--vtr-text); box-shadow: 0 1px 2px rgba(15, 25, 40, .12); }
+
+/* Right-side preview panel: a 3rd grid column appended when a preview opens. */
+.vtr-objects.has-preview .vtr-objects-body { grid-template-columns: 240px minmax(0, 1fr) minmax(360px, 460px); }
+.vtr-objects.has-preview.is-sidecollapsed .vtr-objects-body { grid-template-columns: minmax(0, 1fr) minmax(360px, 460px); }
+.vtr-objects-preview { overflow: auto; background: var(--vtr-bg); border: 1px solid var(--vtr-line); border-radius: 14px; margin: 10px 12px 12px 0; box-shadow: 0 1px 3px rgba(15,25,40,.05), 0 12px 34px -18px rgba(15,25,40,.2); }
+.vtr-objects-preview .vtr-objects-page { max-width: none; padding: 22px 24px 60px; }
+
+/* Safari-style skin for Obsidian's native tab bar, only while an Objects view is
+   active (body.vtr-objects-active). The --vtr-* tokens live on .vtr-objects, which is outside
+   <body>, so redefine the handful used here as literal light/dark values. */
+body.vtr-objects-active { --vtr-canvas: #eceef1; --vtr-line: #e6e8ec; --vtr-panel: #e9ebef; --vtr-bg: #ffffff; }
+body.vtr-objects-active.theme-dark { --vtr-canvas: #1c1d20; --vtr-line: #383a3f; --vtr-panel: #303236; --vtr-bg: #26282c; }
+body.vtr-objects-active .workspace-tab-header-container { background: var(--vtr-canvas); padding: 4px 6px; border-bottom: 1px solid var(--vtr-line); }
+body.vtr-objects-active .workspace-tab-header { position: relative; border-radius: 8px; margin: 0; padding: 4px 6px; background: transparent; }
+body.vtr-objects-active .workspace-tab-header:hover { background: color-mix(in srgb, var(--vtr-panel) 55%, transparent); }
+body.vtr-objects-active .workspace-tab-header.is-active { background: var(--vtr-bg); box-shadow: 0 1px 2px rgba(15,25,40,.14), 0 0 0 .5px rgba(15,25,40,.05); }
+/* faint dividers between inactive tabs, hidden next to the active one */
+body.vtr-objects-active .workspace-tab-header + .workspace-tab-header::before { content: ""; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--vtr-line); }
+body.vtr-objects-active .workspace-tab-header.is-active::before, body.vtr-objects-active .workspace-tab-header.is-active + .workspace-tab-header::before { display: none; }
+
+/* ==========================================================================
+   Objects hub: calendar, task dashboard, inline content editor
+   ========================================================================== */
+
+/* A) Calendar */
+.vtr-objects .vtr-cal-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-bottom: 24px; }
+.vtr-objects .vtr-cal-title { font-family: inherit; text-shadow: none; font-size: 22px; font-weight: 700; color: var(--vtr-text); }
+.vtr-objects .vtr-cal-nav { display: flex; align-items: center; gap: 2px; justify-self: end; }
+.vtr-objects .vtr-cal-navbtn { display: inline-flex; align-items: center; padding: 5px 11px; border-radius: 8px; color: var(--vtr-dim); font-size: 15px; cursor: pointer; background: none; border: none; }
+.vtr-objects .vtr-cal-navbtn:hover { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects .vtr-cal-navbtn svg { width: 18px; height: 18px; }
+.vtr-objects .vtr-cal-seg { display: inline-flex; justify-self: center; gap: 6px; }
+.vtr-objects .vtr-cal-segbtn { padding: 6px 14px; border-radius: 8px; font-size: 16px; color: var(--vtr-dim); cursor: pointer; background: none; border: none; }
+.vtr-objects .vtr-cal-segbtn:hover { color: var(--vtr-text); }
+.vtr-objects .vtr-cal-segbtn.is-on { background: var(--vtr-panel); color: var(--vtr-text); font-weight: 600; }
+
+.vtr-objects .vtr-cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); }
+.vtr-objects .vtr-cal-dow > * { padding: 6px 8px; font-size: 11px; color: var(--vtr-faint); text-transform: uppercase; letter-spacing: .04em; }
+.vtr-objects .vtr-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--vtr-line); border-left: 1px solid var(--vtr-line); }.vtr-objects .vtr-cal-more { font-size: 11px; color: var(--vtr-faint); }
+
+.vtr-objects .vtr-cal-cols { display: grid; border-left: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-cal-col { display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--vtr-line); padding: 0 14px; }
+.vtr-objects .vtr-cal-col-b { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; padding: 12px 0; }
+.vtr-objects .vtr-cal-dhead { padding: 12px 0; }
+.vtr-objects .vtr-cal-col .vtr-cal-dhead { border-bottom: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-cal-dhead-dow { font-size: 15px; font-weight: 600; }
+.vtr-objects .vtr-cal-dhead-line { display: flex; align-items: baseline; gap: 12px; margin-top: 3px; }
+.vtr-objects .vtr-cal-dhead-date { font-size: 27px; font-weight: 800; color: var(--vtr-text); letter-spacing: -0.01em; }
+.vtr-objects .vtr-cal-dhead-wk { font-size: 13px; color: var(--vtr-faint); }
+.vtr-objects .vtr-cal-dhead.is-today .vtr-cal-dhead-date { color: var(--vtr-accent); }
+.vtr-objects .vtr-cal-list { display: flex; flex-direction: column; }
+.vtr-objects .vtr-cal-lday { padding: 6px 0 20px; border-bottom: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-cal-lday-b { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+
+/* Day view: rich panel + mini month picker. */
+.vtr-objects .vtr-cal-daywrap { display: flex; align-items: flex-start; justify-content: space-between; gap: 48px; }
+.vtr-objects .vtr-cal-mtoggle.is-on { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects .vtr-cal-daymain { flex: 1 1 auto; min-width: 0; max-width: 660px; }
+.vtr-objects .vtr-cal-create { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.vtr-objects .vtr-cal-createbtn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--vtr-line); border-radius: 8px; background: var(--vtr-bg); color: var(--vtr-text); font-size: 13px; cursor: pointer; }
+.vtr-objects .vtr-cal-createbtn:hover { border-color: var(--vtr-accent); }
+.vtr-objects .vtr-cal-createbtn svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-cal-createbtn > span:first-child { display: inline-flex; color: var(--vtr-dim); }
+.vtr-objects .vtr-cal-createbtn-t { display: inline-flex; align-items: center; gap: 8px; }
+.vtr-objects .vtr-cal-col .vtr-cal-dhead-date { font-size: 18px; }
+.vtr-objects .vtr-cal-sep { border: none; border-top: 1px solid var(--vtr-line); margin: 24px 0; }
+.vtr-objects .vtr-objects-sech-empty { text-align: center; color: var(--vtr-faint); padding: 44px 0; }
+.vtr-objects .vtr-cal-refs { display: flex; flex-direction: column; gap: 2px; }
+.vtr-objects .vtr-cal-ref { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 8px; cursor: pointer; }
+.vtr-objects .vtr-cal-ref:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-cal-ref input { accent-color: var(--vtr-accent); flex: none; }
+.vtr-objects .vtr-cal-ref-t { flex: 1; font-size: 14px; color: var(--vtr-text); }
+.vtr-objects .vtr-cal-ref-t.is-done { text-decoration: line-through; color: var(--vtr-faint); }
+.vtr-objects .vtr-cal-ref-time { flex: none; font-size: 12px; font-weight: 600; color: var(--vtr-accent); white-space: nowrap; }
+.vtr-objects .vtr-cal-ref-recur { flex: none; display: inline-flex; color: var(--vtr-faint); }
+.vtr-objects .vtr-cal-ref-recur svg { width: 15px; height: 15px; }
+.vtr-objects .vtr-cal-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.vtr-objects .vtr-cal-card-type { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; font-size: 13px; color: var(--vtr-dim); }
+.vtr-objects .vtr-cal-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--vtr-line); border-radius: 12px; background: var(--vtr-bg); cursor: pointer; box-shadow: 0 1px 2px rgba(15, 25, 40, .05), 0 6px 16px -8px rgba(15, 25, 40, .12); transition: box-shadow .14s ease, transform .14s ease; }
+.vtr-objects .vtr-cal-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(15, 25, 40, .06), 0 14px 30px -10px rgba(15, 25, 40, .2); }
+.vtr-objects .vtr-cal-card-img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block; }
+.vtr-objects .vtr-cal-card-t { font-size: 14px; font-weight: 600; color: var(--vtr-text); }
+.vtr-objects .vtr-cal-aside { flex: none; width: 280px; display: flex; flex-direction: column; gap: 18px; }
+.vtr-objects .vtr-cal-mini { border: 1px solid var(--vtr-line); border-radius: 12px; padding: 14px; }
+.vtr-objects .vtr-cal-mini-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.vtr-objects .vtr-cal-mini-t { font-size: 13.5px; font-weight: 600; color: var(--vtr-text); }
+.vtr-objects .vtr-cal-mini-nav { display: inline-flex; padding: 2px; border-radius: 6px; color: var(--vtr-dim); background: none; border: none; cursor: pointer; }
+.vtr-objects .vtr-cal-mini-nav:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-cal-mini-nav svg { width: 16px; height: 16px; }
+.vtr-objects .vtr-cal-mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.vtr-objects .vtr-cal-mini-dow { text-align: center; font-size: 10.5px; color: var(--vtr-faint); padding: 4px 0; }
+.vtr-objects .vtr-cal-mini-d { text-align: center; font-size: 12px; color: var(--vtr-text); padding: 5px 0; border-radius: 6px; cursor: pointer; }
+.vtr-objects .vtr-cal-mini-d:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-cal-mini-d.is-out { color: var(--vtr-faint); }
+.vtr-objects .vtr-cal-mini-d.is-today:not(.is-sel) { color: var(--vtr-accent); font-weight: 700; }
+.vtr-objects .vtr-cal-mini-d.is-sel { background: var(--vtr-accent); color: #fff; }
+
+.vtr-objects .vtr-cal-ev { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--vtr-text); padding: 2px 4px; border-radius: 5px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vtr-objects .vtr-cal-ev:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-cal-ev > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+
+/* B) Task dashboard */
+.vtr-objects .vtr-task { display: flex; flex-direction: column; gap: 22px; }
+/* The composer (object page only) is a row like the others: a "+" and a bare
+   field, weightless until it has focus. */
+.vtr-objects .vtr-task-add { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 5px; border-radius: 6px; color: var(--vtr-faint); }
+.vtr-objects .vtr-task-add:hover, .vtr-objects .vtr-task-add:focus-within { background: var(--vtr-panel); }
+.vtr-objects .vtr-task-add:focus-within { color: var(--vtr-accent); }
+.vtr-objects .vtr-task-add-i { display: inline-flex; flex: none; }
+.vtr-objects .vtr-task-add-i svg { width: 13px; height: 13px; }
+.vtr-objects .vtr-task-add input { flex: 1; min-width: 0; padding: 0; border: none; background: transparent; color: var(--vtr-text); font-size: 13px; font-family: inherit; }
+.vtr-objects .vtr-task-add input:focus { outline: none; }
+.vtr-objects .vtr-task-add input::placeholder { color: var(--vtr-faint); }
+.vtr-objects .vtr-task-sec { display: flex; flex-direction: column; gap: 2px; }
+.vtr-objects .vtr-task-sech { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 600; margin-bottom: 13px; }
+.vtr-objects .vtr-task-secc { color: var(--vtr-faint); font-weight: 400; font-size: 12px; }
+.vtr-objects .vtr-task-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; gap: 0 11px; padding: 7px 6px; border-radius: 8px; }
+.vtr-objects .vtr-task-row:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-task-check { width: 16px; height: 16px; accent-color: var(--vtr-accent); flex: none; cursor: pointer; }
+.vtr-objects .vtr-task-t { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--vtr-text); cursor: pointer; }
+.vtr-objects .vtr-task-t.is-done { text-decoration: line-through; color: var(--vtr-faint); }
+
+/* C) Inline content editor (object page) */
+.vtr-objects .vtr-objects-pcontent.is-editing { cursor: text; }
+.vtr-objects .vtr-objects-pedit { width: 100%; min-height: 200px; border: none; outline: none; resize: none; background: transparent; color: var(--vtr-text); font-family: var(--font-text); font-size: var(--font-text-size); line-height: var(--line-height-normal); padding: 0; }
+
+/* ---- Objects hub: calendar, type-editor config, layout thumbs, card props, cover ---- */
+
+/* A) Calendar additions */
+.vtr-objects .vtr-cal-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-cal-month { text-align: center; padding: 6px 4px; border-radius: 7px; font-size: 14px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects .vtr-cal-month:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-cal-month.is-on { background: var(--vtr-panel); color: var(--vtr-text); font-weight: 600; }
+
+
+.vtr-objects .vtr-cal-empty { text-align: center; padding: 80px 20px; color: var(--vtr-faint); }
+.vtr-objects .vtr-cal-empty-title { font-size: 16px; font-weight: 700; color: var(--vtr-text); margin-bottom: 6px; }
+.vtr-objects .vtr-cal-empty-sub { font-size: 13.5px; }
+
+/* B) Type-editor Configuration sections (<details>/<summary>) */
+.vtr-objects .vtr-objects-cfgsec { border: 1px solid var(--vtr-line); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.vtr-objects .vtr-objects-cfgsec-h { display: flex; align-items: center; gap: 9px; padding: 13px 15px; cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; background: var(--vtr-canvas); position: relative; }
+.vtr-objects .vtr-objects-cfgsec-h::-webkit-details-marker { display: none; }
+.vtr-objects .vtr-objects-cfgsec-h svg { width: 16px; height: 16px; color: var(--vtr-dim); }
+.vtr-objects .vtr-objects-cfgsec-h::after { content: ""; margin-left: auto; width: 7px; height: 7px; border-right: 1.5px solid var(--vtr-dim); border-bottom: 1.5px solid var(--vtr-dim); transform: rotate(45deg); transition: transform .15s ease; }
+.vtr-objects .vtr-objects-cfgsec[open] .vtr-objects-cfgsec-h::after { transform: rotate(-135deg); }
+.vtr-objects .vtr-objects-cfgsec[open] .vtr-objects-cfgsec-h { border-bottom: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-objects-cfgsec-b { padding: 14px 15px; display: flex; flex-direction: column; gap: 14px; }
+.vtr-objects .vtr-objects-segrow { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.vtr-objects .vtr-objects-segrow .vtr-objects-flabel { margin: 0; }
+
+/* C) Layout thumbnails (Page section) */
+.vtr-objects .vtr-objects-layoutopt { width: 130px; }
+.vtr-objects .vtr-objects-layoutopt.is-on { border-color: var(--vtr-accent); }
+.vtr-objects .vtr-objects-layoutthumb { width: 100%; height: 64px; border: 1px solid var(--vtr-line); border-radius: 6px; background: var(--vtr-bg); position: relative; overflow: hidden; }
+.vtr-objects .vtr-objects-layoutthumb::before, .vtr-objects .vtr-objects-layoutthumb::after { content: ""; position: absolute; }
+/* .is-page: title bar + content lines */
+.vtr-objects .vtr-objects-layoutthumb.is-page::before { left: 10px; top: 10px; width: 40%; height: 7px; border-radius: 2px; background: var(--vtr-panel); }
+.vtr-objects .vtr-objects-layoutthumb.is-page::after { left: 10px; top: 26px; right: 10px; height: 4px; border-radius: 2px; background: var(--vtr-line); box-shadow: 0 9px 0 var(--vtr-line), 0 18px 0 var(--vtr-line); }
+/* .is-indexcard: small centered card */
+.vtr-objects .vtr-objects-layoutthumb.is-indexcard::before { left: 22%; top: 16px; right: 22%; bottom: 16px; border: 1px solid var(--vtr-line); border-radius: 5px; background: var(--vtr-panel); }
+/* .is-profile: circle top-left + lines to the right */
+.vtr-objects .vtr-objects-layoutthumb.is-profile::before { left: 10px; top: 12px; width: 20px; height: 20px; border-radius: 50%; background: var(--vtr-panel); }
+.vtr-objects .vtr-objects-layoutthumb.is-profile::after { left: 40px; top: 13px; right: 12px; height: 5px; border-radius: 2px; background: var(--vtr-line); box-shadow: 0 9px 0 var(--vtr-line); }
+/* .is-encyclopedia: narrow left column + content lines to the right */
+.vtr-objects .vtr-objects-layoutthumb.is-encyclopedia::before { left: 0; top: 0; bottom: 0; width: 34%; background: var(--vtr-canvas); border-right: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-objects-layoutthumb.is-encyclopedia::after { left: calc(34% + 12px); top: 12px; right: 12px; height: 5px; border-radius: 2px; background: var(--vtr-line); box-shadow: 0 10px 0 var(--vtr-line), 0 20px 0 var(--vtr-line), 0 30px 0 var(--vtr-line); }
+
+/* D) Card-props checkboxes (Card view section) */
+.vtr-objects .vtr-objects-cardprops { display: flex; flex-direction: column; gap: 2px; }
+.vtr-objects .vtr-objects-cardprop { display: flex; align-items: center; gap: 9px; padding: 5px 4px; font-size: 13.5px; color: var(--vtr-text); cursor: pointer; }
+.vtr-objects .vtr-objects-cardprop input { accent-color: var(--vtr-accent); }
+/* Capacities-style select button (Edit / Link block) + Reset. */
+.vtr-objects .vtr-objects-select { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border: 1px solid var(--vtr-line); border-radius: 8px; background: var(--vtr-bg); font-size: 13.5px; color: var(--vtr-text); cursor: pointer; }
+.vtr-objects .vtr-objects-select:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-objects-select svg { width: 15px; height: 15px; }
+.vtr-objects .vtr-objects-select-caret { display: inline-flex; color: var(--vtr-dim); }
+.vtr-objects .vtr-objects-select-caret svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-objects-linkviewrow { display: flex; align-items: center; gap: 8px; }
+.vtr-objects .vtr-objects-select-btn { padding: 6px 12px; border: 1px solid var(--vtr-line); border-radius: 8px; background: var(--vtr-bg); font-size: 13.5px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects .vtr-objects-select-btn:hover { background: var(--vtr-panel); color: var(--vtr-text); }
+/* Checklist popover (card view). */
+.vtr-objects .vtr-objects-pop { position: fixed; z-index: 60; min-width: 240px; max-height: 60vh; overflow: auto; padding: 6px; background: var(--vtr-bg); border: 1px solid var(--vtr-line); border-radius: 12px; box-shadow: 0 4px 12px rgba(15,25,40,.1), 0 20px 44px -18px rgba(15,25,40,.28); }
+.vtr-objects .vtr-objects-pop-h { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--vtr-faint); padding: 8px 9px 4px; }
+.vtr-objects .vtr-objects-pop-row { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 8px; cursor: pointer; }
+.vtr-objects .vtr-objects-pop-row:hover { background: var(--vtr-panel); }
+.vtr-objects .vtr-objects-pop-i { display: inline-flex; color: var(--vtr-dim); }
+.vtr-objects .vtr-objects-pop-i svg { width: 16px; height: 16px; }
+.vtr-objects .vtr-objects-pop-t { flex: 1; font-size: 14px; color: var(--vtr-text); }
+.vtr-objects .vtr-objects-pop-check { display: inline-flex; color: var(--vtr-accent); }
+.vtr-objects .vtr-objects-pop-check svg { width: 16px; height: 16px; }
+.vtr-objects .vtr-objects-cardprop-i { display: inline-flex; color: var(--vtr-dim); }
+.vtr-objects .vtr-objects-cardprop-i svg { width: 15px; height: 15px; }
+.vtr-objects-card-r .vtr-objects-wl-tags { grid-column: 1 / -1; }
+
+/* E) Cover mode + index-card page */
+.vtr-objects .vtr-objects-pcover.is-small img { height: 180px; }
+.vtr-objects .vtr-objects-pcover.is-wide img { height: 260px; }
+/* Index card (zettel): the whole page is one compact, bounded card. */
+.vtr-objects .vtr-objects-page.is-indexcard { max-width: 560px; margin: 22px auto 40px; padding: 24px 26px 28px;
+  background: var(--vtr-bg); border: 1px solid var(--vtr-line); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(15, 25, 40, .05), 0 16px 40px -20px rgba(15, 25, 40, .22); }
+.vtr-objects .vtr-objects-page.is-indexcard .vtr-objects-ptitle { font-size: 24px; margin: 4px 0 10px; }
+.vtr-objects .vtr-objects-page.is-indexcard .vtr-objects-pchips { margin-bottom: 10px; }
+.vtr-objects .vtr-objects-page.is-indexcard .vtr-objects-pcover { margin: -24px -26px 16px; }
+.vtr-objects .vtr-objects-page.is-indexcard .vtr-objects-pcover.is-small img,
+.vtr-objects .vtr-objects-page.is-indexcard .vtr-objects-pcover.is-wide img { height: 130px; border-radius: 16px 16px 0 0; }
+.vtr-objects .vtr-objects-page.is-indexcard .vtr-objects-pcontent { font-size: 14.5px; }
+
+/* Editable property values as tonal pills (Option B): click to edit. */
+.vtr-objects .vtr-objects-ppill { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 9px; border-radius: 7px; font-size: 13px; cursor: pointer; background: color-mix(in srgb, var(--hue, var(--vtr-accent)) 13%, var(--vtr-bg)); color: color-mix(in srgb, var(--hue, var(--vtr-accent)) 82%, var(--vtr-text)); }
+.vtr-objects .vtr-objects-ppill.is-number, .vtr-objects .vtr-objects-ppill.is-formula { background: var(--vtr-panel); color: var(--vtr-text); }
+.vtr-objects .vtr-objects-ppill.is-empty { background: transparent; border: 1px dashed var(--vtr-line); color: var(--vtr-faint); }
+.vtr-objects .vtr-objects-ppill:hover { filter: brightness(0.97); }
+.vtr-objects .vtr-objects-ppill.is-linked { --hue: var(--vtr-accent); }
+.vtr-objects .vtr-objects-ppill.is-linked:hover span:first-of-type { text-decoration: underline; }
+.vtr-objects .vtr-objects-ppill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects .vtr-objects-ppill-i, .vtr-objects .vtr-objects-ppill-c { display: inline-flex; flex: none; }
+.vtr-objects .vtr-objects-ppill-i svg { width: 13px; height: 13px; }
+.vtr-objects .vtr-objects-ppill-c svg { width: 13px; height: 13px; opacity: .6; }
+/* ── Query filter popover ────────────────────────────────────────────
+   Queries are edited inline (Capacities-style): the Filter tool button opens
+   this popover with AND'd condition rows. Reuses .vtr-objects-pop chrome from
+   objects.css; only the condition-row layout lives here. */
+.vtr-query-pop {
+  width: 340px;
+}
+.vtr-query-pop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 8px;
+}
+.vtr-query-pop-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.vtr-query-pill {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  background: var(--vtr-bg);
+  border: 1px solid var(--vtr-line);
+  border-radius: 7px;
+  color: var(--vtr-text);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.vtr-query-pill:hover {
+  border-color: color-mix(in srgb, var(--vtr-accent) 45%, var(--vtr-line));
+}
+.vtr-query-pill > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vtr-query-pill-c {
+  display: inline-flex;
+  flex: none;
+  color: var(--vtr-faint);
+}
+.vtr-query-pill-c svg {
+  width: 13px;
+  height: 13px;
+}
+.vtr-query-pop-val {
+  flex: 1;
+  min-width: 0;
+  background: var(--vtr-bg);
+  border: 1px solid var(--vtr-line);
+  border-radius: 7px;
+  color: var(--vtr-text);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  outline: none;
+}
+.vtr-query-pop-val:focus {
+  border-color: color-mix(in srgb, var(--vtr-accent) 55%, var(--vtr-line));
+}
+.vtr-query-pop-del {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--vtr-dim);
+  cursor: pointer;
+}
+.vtr-query-pop-del:hover {
+  background: var(--vtr-line);
+  color: var(--vtr-text);
+}
+.vtr-query-pop-del svg {
+  width: 14px;
+  height: 14px;
+}
+.vtr-query-pop-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--vtr-accent);
+  cursor: pointer;
+  padding: 3px 2px;
+}
+.vtr-query-pop-add svg {
+  width: 13px;
+  height: 13px;
+}
+.vtr-query-pop-limit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vtr-line);
+  font-size: 12.5px;
+  color: var(--vtr-dim);
+}
+.vtr-query-pop-limit .vtr-query-pop-val {
+  flex: none;
+  width: 72px;
+}
+.vtr-query-pop-n {
+  flex: none;
+  width: 14px;
+  font-size: 11.5px;
+  color: var(--vtr-faint);
+  font-variant-numeric: tabular-nums;
+}
+/* Share card — the PNG that gets pasted into a chat. Its palette is Tokyo Night
+   no matter which surface the hub is on: the card leaves the vault, and whoever
+   opens it doesn't have the reader's theme. */
+
+/* The card is captured by its own bounds, so it must fit the modal whole — an
+   overflowing edge would photograph whatever sits behind the dialog. */
+.modal.vtr-share {
+  width: 684px;
+  max-width: 94vw;
+}
+
+.vtr-share .vtr-share-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.vtr-share .vtr-share-slot { position: relative; background: #1c1e2b; border-radius: 22px; }
+
+.vtr-share .vtr-share-x {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vtr-panel);
+  color: var(--vtr-dim);
+  border: 1px solid var(--vtr-line);
+  cursor: pointer;
+  opacity: 0;
+}
+.vtr-share .vtr-share-slot:hover .vtr-share-x { opacity: 1; }
+
+/* 3:1 at the default three properties; taller when they wrap, so the type size
+   never has to shrink to fit. */
+.vtr-share .vtr-share-card {
+  --card-bg: #24283b;
+  --card-panel: #2a2f45;
+  --card-line: #1c1e2b;
+  --card-text: #c0caf5;
+  --card-dim: #565f89;
+  --card-accent: #7aa2f7;
+  width: 600px;
+  min-height: 216px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 26px;
+  border-radius: 22px;
+  background: var(--card-bg);
+  color: var(--card-text);
+}
+
+/* The art fills its frame — a max-width alone left a 48px sprite floating in the
+   middle of the box, which is what pushed the text so far right. */
+.vtr-share .vtr-share-thumb {
+  flex: none;
+  width: 168px;
+  height: 168px;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--card-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vtr-share .vtr-share-thumb img {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.vtr-share .vtr-share-body { min-width: 0; flex: 1; }
+
+.vtr-share .vtr-share-title {
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 18px;
+  overflow-wrap: anywhere;
+}
+
+.vtr-share .vtr-share-props {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 14px 22px;
+}
+.vtr-share .vtr-share-props > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.vtr-share .vtr-share-v { overflow-wrap: anywhere; }
+
+.vtr-share .vtr-share-k {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--card-dim);
+}
+.vtr-share .vtr-share-v { font-size: 19px; font-weight: 700; }
+
+/* ---- modal chrome (follows the hub's own surface) ---- */
+
+.vtr-share .vtr-share-sub {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vtr-faint);
+  margin: 18px 0 8px;
+}
+
+.vtr-share .vtr-share-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.vtr-share .vtr-share-chip {
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--vtr-line);
+  background: var(--vtr-panel);
+  color: var(--vtr-dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+.vtr-share .vtr-share-chip.is-on {
+  background: color-mix(in srgb, var(--vtr-accent) 18%, var(--vtr-panel));
+  border-color: color-mix(in srgb, var(--vtr-accent) 45%, var(--vtr-line));
+  color: var(--vtr-text);
+}
+
+.vtr-share .vtr-share-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--vtr-dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+.vtr-share .vtr-share-add:hover { color: var(--vtr-text); }
+
+.vtr-share .vtr-share-bar { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+.vtr-share .vtr-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* ---- picking objects off the grid (the hub, not the modal) ---- */
+
+.vtr-objects .vtr-objects-pickbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--vtr-line);
+  border-radius: 14px;
+  background: var(--vtr-panel);
+}
+
+.vtr-objects .vtr-objects-pickbar-c {
+  min-width: 26px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--vtr-accent) 22%, transparent);
+  color: var(--vtr-text);
+}
+
+.vtr-objects .vtr-objects-pickbar-h { flex: 1; font-size: 12px; color: var(--vtr-dim); }
+
+.vtr-objects .vtr-objects-pickbar-b { cursor: pointer; font-size: 12px; }
+.vtr-objects .vtr-objects-pickbar-b:disabled { opacity: 0.45; cursor: default; }
+
+.vtr-objects .is-picked { outline: 2px solid var(--vtr-accent); outline-offset: 2px; border-radius: 14px; }
+
+/* ---- sheet: several objects in one image ---- */
+
+.vtr-share .vtr-share-sheet {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.vtr-share .vtr-share-shead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 18px 22px 12px;
+}
+.vtr-share .vtr-share-sh-t { font-size: 19px; font-weight: 700; }
+.vtr-share .vtr-share-sh-c {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--card-dim);
+}
+
+.vtr-share .vtr-share-srow {
+  position: relative;
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 22px;
+  border-top: 1px solid var(--card-line);
+}
+
+.vtr-share .vtr-share-srow.is-head {
+  border-top: 0;
+  padding-top: 0;
+  padding-bottom: 6px;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--card-dim);
+}
+
+.vtr-share .vtr-share-rank {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--card-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vtr-share .vtr-share-art { display: flex; align-items: center; justify-content: center; height: 40px; }
+.vtr-share .vtr-share-art img { max-width: 40px; max-height: 40px; object-fit: contain; image-rendering: pixelated; }
+
+.vtr-share .vtr-share-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vtr-share .vtr-share-n { font-size: 16px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.vtr-share .vtr-share-s { font-size: 11px; color: var(--card-dim); }
+
+.vtr-share .vtr-share-num { text-align: right; }
+.vtr-share .vtr-share-num.is-v { font-size: 17px; font-weight: 700; }
+.vtr-share .vtr-share-srow:last-of-type .vtr-share-num.is-v { color: var(--card-text); }
+
+.vtr-share .vtr-share-sfoot {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 22px;
+  border-top: 1px solid var(--card-line);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--card-dim);
+}
+
+/* Hidden until hover, so it never shows up in the capture. */
+.vtr-share .vtr-share-rx {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--card-dim);
+  cursor: pointer;
+  opacity: 0;
+}
+.vtr-share .vtr-share-srow:hover .vtr-share-rx { opacity: 1; }
+/* Task board (renderTaskDashboard) + interactive task row (renderTaskRow). The
+   base .vtr-task/.vtr-task-add/.vtr-task-row/.vtr-task-t styles live in
+   objects.css; this module adds the status lanes, collapse, pills and chips. */
+
+/* Rows share one set of columns so the pills/chips line up down the list:
+   the body owns the tracks, each row re-uses them via subgrid. Columns:
+   checkbox | title | status | priority | schedule | deadline | context. */
+.vtr-objects .vtr-task-secbody { display: grid; grid-template-columns: auto 1fr repeat(5, auto); gap: 2px 11px; }
+.vtr-objects .vtr-task-cell { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+
+/* Status + priority pills — clickable, tinted by value. */
+.vtr-objects .vtr-task-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--vtr-dim);
+  background: color-mix(in srgb, var(--vtr-dim) 14%, transparent);
+}
+.vtr-objects .vtr-task-pill-i { display: inline-flex; }
+.vtr-objects .vtr-task-pill-i svg { width: 12px; height: 12px; }
+
+/* Status tints: In progress = accent, Done = muted, the rest neutral. */
+.vtr-objects .vtr-task-pill.is-in-progress { color: var(--vtr-accent); background: color-mix(in srgb, var(--vtr-accent) 16%, transparent); }
+.vtr-objects .vtr-task-pill.is-done { color: var(--vtr-faint); background: color-mix(in srgb, var(--vtr-faint) 16%, transparent); }
+
+/* Priority tints: High = red, Medium = amber, Low = accent, None = faint. */
+.vtr-objects .vtr-task-pill.is-high { color: #e06666; background: color-mix(in srgb, #e06666 18%, transparent); }
+.vtr-objects .vtr-task-pill.is-medium { color: #e0a866; background: color-mix(in srgb, #e0a866 18%, transparent); }
+.vtr-objects .vtr-task-pill.is-low { color: var(--vtr-accent); background: color-mix(in srgb, var(--vtr-accent) 14%, transparent); }
+.vtr-objects .vtr-task-pill.is-none { color: var(--vtr-faint); background: transparent; }
+
+/* Deadline / schedule / context chips. */
+.vtr-objects .vtr-task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--vtr-dim);
+}
+.vtr-objects .vtr-task-chip-i { display: inline-flex; }
+.vtr-objects .vtr-task-chip-i svg { width: 12px; height: 12px; }
+.vtr-objects .vtr-task-chip.is-context { cursor: pointer; color: var(--vtr-accent); }
+.vtr-objects .vtr-task-chip.is-more { padding: 1px 6px; border-radius: 20px; background: color-mix(in srgb, var(--vtr-accent) 13%, transparent); }
+.vtr-objects .vtr-task-chip.is-deadline.is-overdue { color: #e06666; font-weight: 600; }
+
+/* ---- Compact row: the object page's own listing (task-row.ts `page`). The
+   hub's Tasks list keeps the wide grid above; everything here is scoped to
+   .is-compact so the two can't drift into each other. ---- */
+.vtr-objects .vtr-objects-tasks .vtr-task-secbody { display: flex; flex-direction: column; gap: 0; }
+.vtr-objects .vtr-task-row.is-compact { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 5px; border-radius: 6px; }
+.vtr-objects .vtr-task-row.is-compact .vtr-task-check { width: 13px; height: 13px; margin: 0; }
+.vtr-objects .vtr-task-row.is-compact .vtr-task-t { min-width: 0; gap: 6px; font-size: 13px; }
+.vtr-objects .vtr-task-row.is-compact .vtr-task-tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtr-objects .vtr-task-tail {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-size: 11.5px;
+  color: var(--vtr-dim);
+}
+.vtr-objects .vtr-task-tail .vtr-task-chip { font-size: 11.5px; }
+.vtr-objects .vtr-task-tail .vtr-task-chip-i svg { width: 11px; height: 11px; }
+
+/* Status + priority as bare icons — clickable, tinted by value, labelled by
+   their tooltip. The word they used to carry is what made the row tall. */
+.vtr-objects .vtr-task-ico { display: inline-flex; cursor: pointer; color: var(--vtr-faint); }
+.vtr-objects .vtr-task-ico svg { width: 12px; height: 12px; }
+.vtr-objects .vtr-task-ico.is-in-progress { color: var(--vtr-accent); }
+.vtr-objects .vtr-task-ico.is-next-up { color: #e0a866; }
+.vtr-objects .vtr-task-ico.is-status.is-done { color: #4e9c7d; }
+.vtr-objects .vtr-task-ico.is-high { color: #e06666; }
+.vtr-objects .vtr-task-ico.is-medium { color: #e0a866; }
+.vtr-objects .vtr-task-ico.is-low { color: var(--vtr-accent); }
+.vtr-objects .vtr-task-ico.is-none { opacity: .35; }
+
+/* Schedule → deadline as one span. Same weight on both: the arrow tells them
+   apart when both exist, and a lone date leans on its tooltip. */
+.vtr-objects .vtr-task-when { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vtr-objects .vtr-task-when .is-sched { color: var(--vtr-faint); }
+.vtr-objects .vtr-task-when .is-due { color: var(--vtr-dim); }
+.vtr-objects .vtr-task-when .is-due.is-overdue { color: #e06666; }
+.vtr-objects .vtr-task-arw { color: var(--vtr-faint); opacity: .6; }
+
+/* Sidebar "+" quick-create on the Tasks nav row (objects.ts integration). Shown
+   on row hover, sitting where the count is. */
+.vtr-objects .vtr-objects-nav-add {
+  display: none;
+  align-items: center;
+  margin-left: auto;
+  cursor: pointer;
+  color: var(--vtr-dim);
+}
+.vtr-objects .vtr-objects-nav-add svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-objects-nav:hover .vtr-objects-nav-add { display: inline-flex; }
+
+/* Tasks section on an object page (object-page.ts integration). */
+.vtr-objects .vtr-objects-tasks { margin-top: 38px; border-top: 1px solid var(--vtr-line); padding-top: 16px; max-width: 640px; display: flex; flex-direction: column; gap: 0; }
+.vtr-objects .vtr-objects-tasks .vtr-task-add input { margin: 0; }
+
+/* Recurring glyph on a task row (task-row.ts). */
+.vtr-objects .vtr-task-recur { display: inline-flex; flex: none; color: var(--vtr-accent); }
+.vtr-objects .vtr-task-recur svg { width: 12px; height: 12px; }
+
+/* Recurrence editor on a task's object page (task-stats.ts). */
+.vtr-objects .vtr-recur { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.vtr-objects .vtr-recur-head { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--vtr-dim); }
+.vtr-objects .vtr-recur-head-i { display: inline-flex; color: var(--vtr-accent); }
+.vtr-objects .vtr-recur-head-i svg { width: 13px; height: 13px; }
+
+.vtr-objects .vtr-recur-enable {
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+  padding: 4px 10px; font-size: 12px; cursor: pointer;
+  color: var(--vtr-accent);
+  background: color-mix(in srgb, var(--vtr-accent) 12%, transparent);
+}
+.vtr-objects .vtr-recur-enable svg { width: 13px; height: 13px; }
+
+.vtr-objects .vtr-recur-body { display: flex; flex-direction: column; gap: 10px; }
+.vtr-objects .vtr-recur-modes { display: inline-flex; gap: 4px; }
+.vtr-objects .vtr-recur-mode {
+  padding: 3px 10px; font-size: 12px; cursor: pointer;
+  color: var(--vtr-dim);
+  background: color-mix(in srgb, var(--vtr-dim) 12%, transparent);
+}
+.vtr-objects .vtr-recur-mode.is-active { color: var(--vtr-accent); background: color-mix(in srgb, var(--vtr-accent) 16%, transparent); }
+
+.vtr-objects .vtr-recur-row { display: flex; align-items: center; gap: 8px; }
+.vtr-objects .vtr-recur-lbl { font-size: 12px; color: var(--vtr-dim); }
+.vtr-objects .vtr-recur-num { width: 54px; }
+.vtr-objects .vtr-recur-num, .vtr-objects .vtr-recur-unit, .vtr-objects .vtr-recur-until {
+  padding: 3px 6px; font-size: 12px;
+  color: var(--vtr-text); background: var(--vtr-panel);
+  border: 1px solid var(--vtr-line); border-radius: 4px;
+}
+
+.vtr-objects .vtr-recur-days { display: inline-flex; gap: 4px; }
+.vtr-objects .vtr-recur-day {
+  min-width: 34px; height: 24px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  color: var(--vtr-dim);
+  background: color-mix(in srgb, var(--vtr-dim) 12%, transparent);
+}
+.vtr-objects .vtr-recur-day.is-active { color: var(--vtr-on-accent); background: var(--vtr-accent); }
+
+.vtr-objects .vtr-recur-clear { display: inline-flex; margin-left: auto; cursor: pointer; color: var(--vtr-faint); }
+.vtr-objects .vtr-recur-clear:hover { color: #e06666; }
+.vtr-objects .vtr-recur-clear svg { width: 14px; height: 14px; }
+
+/* Hybrid quick-add composer at the top of the Tasks overview. */
+.vtr-objects-quickadd { margin: 14px 14px 4px; }
+.vtr-objects-qa-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  border-radius: 10px;
+  background: var(--vtr-panel);
+  border: 1px solid var(--vtr-line);
+  transition: border-color .12s;
+}
+.vtr-objects-qa-row:focus-within { border-color: color-mix(in srgb, var(--vtr-accent) 55%, var(--vtr-line)); }
+.vtr-objects-qa-i { display: inline-flex; color: var(--vtr-faint); flex: none; }
+.vtr-objects-qa-i svg { width: 16px; height: 16px; }
+.vtr-objects-qa-row:focus-within .vtr-objects-qa-i { color: var(--vtr-accent); }
+.vtr-objects-qa-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--vtr-text);
+  font-size: 14px;
+  font-family: var(--font-text);
+}
+.vtr-objects-qa-row input::placeholder { color: var(--vtr-faint); }
+.vtr-objects-qa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--vtr-line);
+  color: var(--vtr-dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+.vtr-objects-qa-btn svg { width: 13px; height: 13px; }
+.vtr-objects-qa-btn.is-on { background: color-mix(in srgb, var(--vtr-accent) 14%, var(--vtr-bg)); border-color: color-mix(in srgb, var(--vtr-accent) 40%, transparent); color: color-mix(in srgb, var(--vtr-accent) 82%, var(--vtr-text)); }
+
+/* Live preview of the parsed task. */
+.vtr-objects-qa-preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 4px 2px; }
+.vtr-objects-qa-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 6px; font-size: 12px; background: var(--vtr-panel); color: var(--vtr-dim); }
+.vtr-objects-qa-chip-i { display: inline-flex; }
+.vtr-objects-qa-chip-i svg { width: 12px; height: 12px; }
+.vtr-objects-qa-chip.is-title { background: transparent; color: var(--vtr-text); font-weight: 500; padding-left: 0; }
+.vtr-objects-qa-chip.is-recur { background: color-mix(in srgb, var(--vtr-accent) 13%, var(--vtr-bg)); color: color-mix(in srgb, var(--vtr-accent) 82%, var(--vtr-text)); }
+.vtr-objects-qa-chip.is-deadline { background: color-mix(in srgb, #c0392b 12%, var(--vtr-bg)); color: color-mix(in srgb, #c0392b 78%, var(--vtr-text)); }
+.vtr-objects-qa-chip.is-pri.is-high { background: color-mix(in srgb, #c0392b 12%, var(--vtr-bg)); color: color-mix(in srgb, #c0392b 78%, var(--vtr-text)); }
+
+/* Occurrence log — read-only list under a recurring task's properties. */
+.vtr-objects .vtr-occ { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--vtr-line); }
+.vtr-objects .vtr-occ-h { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.vtr-objects .vtr-occ-k { color: var(--vtr-dim); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.vtr-objects .vtr-occ-c { color: var(--vtr-dim); font-size: 11px; padding: 1px 7px; border-radius: 20px; background: var(--vtr-panel); }
+.vtr-objects .vtr-occ-chev { display: inline-flex; margin-left: auto; color: var(--vtr-faint); }
+.vtr-objects .vtr-occ-chev svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-occ.is-collapsed .vtr-occ-chev { transform: rotate(-90deg); }
+.vtr-objects .vtr-occ.is-collapsed .vtr-occ-b { display: none; }
+.vtr-objects .vtr-occ-b { display: flex; flex-direction: column; margin-top: 4px; }
+.vtr-objects .vtr-occ-row { display: flex; align-items: center; gap: 7px; padding: 3px 0; font-size: 12.5px; color: var(--vtr-text); }
+.vtr-objects .vtr-occ-i { display: inline-flex; color: var(--vtr-dim); }
+.vtr-objects .vtr-occ-i svg { width: 14px; height: 14px; }
+.vtr-objects .vtr-occ-row.is-completed .vtr-occ-i { color: #4e9c7d; }
+.vtr-objects .vtr-occ-row.is-excused .vtr-occ-i { color: var(--vtr-accent); }
+.vtr-objects .vtr-occ-p { margin-left: auto; color: var(--vtr-faint); font-size: 11.5px; }
+.vtr-objects .vtr-occ-more { padding: 3px 0; font-size: 12px; color: var(--vtr-dim); cursor: pointer; }
+.vtr-objects .vtr-occ-more:hover { color: var(--vtr-text); }
+/* Shared neumorphic treatment for any surface flagged data-vtr-neu (neumorphism,
+   tokyo-night). Raised cards/panels drop their border and lift with a dual shadow;
+   inputs and active tabs sink in. The Objects hub already uses soft corners, so
+   there's no hairline-identity conflict here. Palettes live per-theme alongside. */
+
+.vtr-objects[data-vtr-neu] :is(
+    .vtr-objects-card,
+    .vtr-objects-tcard,
+    .vtr-objects-collcard,
+    .vtr-objects-linkcard,
+    .vtr-objects-linkembed,
+    .vtr-objects-props,
+    .vtr-objects-pavatar,
+    .vtr-objects-pcover-side
+  ) {
+  background: var(--vtr-bg);
+  border: none;
+  box-shadow: 5px 5px 12px var(--vtr-neu-lo), -5px -5px 12px var(--vtr-neu-hi);
+}
+.vtr-objects[data-vtr-neu] .vtr-objects-card:hover {
+  box-shadow: 7px 7px 16px var(--vtr-neu-lo), -7px -7px 16px var(--vtr-neu-hi);
+}
+
+/* Inputs and pressed controls sink into the surface. */
+.vtr-objects[data-vtr-neu] :is(.vtr-objects-finput, .vtr-objects-select, .vtr-objects-filter input) {
+  background: var(--vtr-bg);
+  border: none;
+  box-shadow: inset 2px 2px 5px var(--vtr-neu-lo), inset -2px -2px 5px var(--vtr-neu-hi);
+}
+.vtr-objects[data-vtr-neu] :is(.vtr-objects-tab.is-active, .vtr-objects-tab.is-on, .vtr-objects-nav.is-on) {
+  background: var(--vtr-bg);
+  box-shadow: inset 2px 2px 5px var(--vtr-neu-lo), inset -2px -2px 5px var(--vtr-neu-hi);
+}
+
+/* The main content panel is raised off the surface — a top margin gives the top
+   edge room to lift (otherwise it's flush under the top bar and the shadow hides). */
+.vtr-objects[data-vtr-neu] .vtr-objects-main {
+  border: none;
+  margin-top: 12px;
+  box-shadow: 5px 5px 12px var(--vtr-neu-lo), -5px -5px 12px var(--vtr-neu-hi);
+}
+/* Neumorphism — auto light/dark, following the Obsidian theme. Palette only; the
+   raised/pressed treatment lives in themes/base.css (keyed on data-vtr-neu). */
+
+:is(.vtr-objects, .vtr-modal)[data-vtr-surface="neu"] {
+  --vtr-bg: #f1f3f7;
+  --vtr-canvas: #f1f3f7;
+  --vtr-panel: #e8ebf1;
+  --vtr-line: #e0e3e9;
+  --vtr-text: #3a3e47;
+  --vtr-dim: #8a8f9a;
+  --vtr-faint: #b0b4bd;
+  --vtr-neu-lo: #d3d7df;
+  --vtr-neu-hi: #ffffff;
+}
+
+body.theme-dark :is(.vtr-objects, .vtr-modal)[data-vtr-surface="neu"] {
+  --vtr-bg: #2b2e36;
+  --vtr-canvas: #2b2e36;
+  --vtr-panel: #313640;
+  --vtr-line: #22252c;
+  --vtr-text: #dce0e6;
+  --vtr-dim: #8b909b;
+  --vtr-faint: #5a606b;
+  --vtr-neu-lo: #1f2128;
+  --vtr-neu-hi: #363a44;
+}
+/* Tokyo Night (dark) with the neumorphic relief and its own blue accent. Palette
+   only; the raised/pressed treatment lives in themes/base.css (data-vtr-neu). */
+
+:is(.vtr-objects, .vtr-modal)[data-vtr-surface="tokyo"] {
+  --vtr-bg: #24283b;
+  --vtr-canvas: #24283b;
+  --vtr-panel: #2a2f45;
+  --vtr-line: #1c1e2b;
+  --vtr-text: #c0caf5;
+  --vtr-dim: #565f89;
+  --vtr-faint: #414868;
+  --vtr-neu-lo: #191b28;
+  --vtr-neu-hi: #2e3350;
+  --vtr-accent: #7aa2f7;
+}
+
+/* Catppuccin Latte (light) com o mesmo relevo neumórfico das outras superfícies.
+   Só as cores de superfície e texto; o accent continua sendo o do Obsidian e o
+   tratamento raised/pressed vive em themes/base.css (data-vtr-neu). */
+
+:is(.vtr-objects, .vtr-modal)[data-vtr-surface="latte"] {
+  --vtr-bg: #eff1f5;      /* base */
+  --vtr-canvas: #eff1f5;
+  --vtr-rail: #e6e9ef;    /* mantle */
+  --vtr-panel: #dce0e8;   /* crust — precisa contrastar com bg e rail no hover */
+  --vtr-line: #ccd0da;    /* surface0 */
+  --vtr-text: #4c4f69;    /* text */
+  --vtr-dim: #6c6f85;     /* subtext0 */
+  --vtr-faint: #9ca0b0;   /* overlay0 */
+  --vtr-neu-lo: #ccd0da;
+  --vtr-neu-hi: #ffffff;
+}

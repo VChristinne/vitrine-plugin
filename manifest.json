@@ -1,0 +1,10 @@
+{
+  "id": "vitrine",
+  "name": "Vitrine",
+  "version": "0.9.24",
+  "minAppVersion": "1.4.0",
+  "description": "Turns your notes into typed objects (pages, tasks, weblinks and your own types) with collections, saved queries, a calendar and per-type property schemas, all driven by frontmatter.",
+  "author": "VChristinne",
+  "authorUrl": "https://github.com/VChristinne",
+  "isDesktopOnly": false
+}
